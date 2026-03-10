@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Group 1 Club</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff">
+<style>
+/* ── Reset & Base ── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root {
+  --bg: #f8f9fc;
+  --surface: #ffffff;
+  --surface-alt: #f1f3f8;
+  --border: #e8ebf0;
+  --text: #1a1d26;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --accent: #c8a44e;
+  --accent-light: #faf5e6;
+  --green: #16a34a;
+  --green-bg: #ecfdf5;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --blue: #2563eb;
+  --blue-bg: #eff6ff;
+  --purple: #7c3aed;
+  --orange: #ea580c;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── Header ── */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-left { display: flex; align-items: center; gap: 12px; }
+.menu-btn {
+  background: none; border: none; cursor: pointer; padding: 6px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.menu-btn span {
+  display: block; width: 22px; height: 2px; background: var(--text);
+  border-radius: 2px; transition: all 0.3s;
+}
+.header-title {
+  font-size: 17px; font-weight: 700; letter-spacing: -0.3px;
+  color: var(--text);
+}
+.header-title em { font-style: normal; color: var(--accent); }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.notif-btn {
+  background: none; border: none; cursor: pointer; font-size: 20px;
+  position: relative; padding: 6px;
+}
+.notif-badge {
+  position: absolute; top: 2px; right: 2px;
+  width: 8px; height: 8px; background: var(--red);
+  border-radius: 50%; border: 2px solid var(--surface);
+}
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #e8c96a);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff;
+  cursor: pointer;
+}
+
+/* ── Menu Overlay ── */
+.menu-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.4);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.menu-overlay.open { opacity: 1; pointer-events: auto; }
+.menu-drawer {
+  position: fixed; top: 0; left: -300px; z-index: 201;
+  width: 280px; height: 100%; background: var(--surface);
+  transition: left 0.3s ease;
+  display: flex; flex-direction: column;
+  box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+}
+.menu-overlay.open .menu-drawer { left: 0; }
+.menu-header {
+  padding: 32px 24px 24px;
+  background: linear-gradient(135deg, #1a1d26 0%, #2d3148 100%);
+  color: #fff;
+}
+.menu-header h2 { font-size: 22px; font-weight: 800; margin-bottom: 2px; }
+.menu-header h2 em { font-style: normal; color: var(--accent); }
+.menu-header p { font-size: 13px; opacity: 0.7; }
+.menu-items { flex: 1; padding: 12px 0; overflow-y: auto; }
+.menu-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 24px; cursor: pointer;
+  font-size: 15px; font-weight: 500; color: var(--text);
+  transition: background 0.15s;
+  border: none; background: none; width: 100%; text-align: left;
+}
+.menu-item:hover { background: var(--surface-alt); }
+.menu-item.active { color: var(--accent); background: var(--accent-light); }
+.menu-item .icon { font-size: 20px; width: 28px; text-align: center; }
+.menu-divider { height: 1px; background: var(--border); margin: 8px 24px; }
+.menu-footer {
+  padding: 16px 24px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text-muted);
+}
+
+/* ── Pages ── */
+.page { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
+.page.active { display: block; }
+.page-title {
+  font-size: 26px; font-weight: 800; letter-spacing: -0.5px;
+  margin-bottom: 16px;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+.card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px;
+}
+.card-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.card-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+/* ── Banner ── */
+.banner {
+  background: linear-gradient(135deg, #1a1d26 0%, #2d3148 100%);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.banner::after {
+  content: '🏇'; position: absolute; right: 16px; bottom: 8px;
+  font-size: 64px; opacity: 0.15;
+}
+.banner-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.2px; color: var(--accent); margin-bottom: 8px;
+}
+.banner-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.banner-detail { font-size: 14px; opacity: 0.8; margin-bottom: 16px; }
+.banner-countdown {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.12); border-radius: 8px;
+  padding: 8px 14px; font-size: 14px; font-weight: 600;
+}
+.banner-btn {
+  display: inline-block; margin-top: 12px;
+  background: var(--accent); color: #1a1d26;
+  padding: 10px 24px; border-radius: 10px;
+  font-size: 14px; font-weight: 700; text-decoration: none;
+  cursor: pointer; border: none;
+}
+
+/* ── Stats Row ── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 16px 12px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+.stat-icon { font-size: 24px; margin-bottom: 6px; }
+.stat-value { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.stat-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+.stat-value.green { color: var(--green); }
+.stat-value.red { color: var(--red); }
+
+/* ── Result Feed ── */
+.result-item {
+  display: flex; gap: 14px; padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.result-item:last-child { border-bottom: none; }
+.result-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.result-icon.win { background: var(--green-bg); }
+.result-icon.loss { background: var(--red-bg); }
+.result-info { flex: 1; }
+.result-race { font-size: 14px; font-weight: 600; }
+.result-detail { font-size: 13px; color: var(--text-secondary); }
+.result-pnl { font-size: 15px; font-weight: 700; text-align: right; align-self: center; }
+.result-pnl.green { color: var(--green); }
+.result-pnl.red { color: var(--red); }
+
+/* ── Leaderboard ── */
+.lb-filters {
+  display: flex; gap: 6px; margin-bottom: 14px;
+  overflow-x: auto; padding-bottom: 4px;
+}
+.lb-filter {
+  padding: 7px 14px; border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  background: var(--surface-alt); color: var(--text-secondary);
+  border: 1px solid var(--border); cursor: pointer;
+  white-space: nowrap; transition: all 0.15s;
+}
+.lb-filter.active { background: var(--text); color: #fff; border-color: var(--text); }
+.lb-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; margin-bottom: 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: all 0.15s;
+}
+.lb-row.highlight { border-color: var(--accent); background: var(--accent-light); }
+.lb-row.top3 { border-left: 3px solid var(--accent); }
+.lb-pos {
+  width: 28px; font-size: 15px; font-weight: 800;
+  text-align: center; color: var(--text-muted);
+}
+.lb-pos.gold { color: var(--accent); }
+.lb-name { flex: 1; font-size: 15px; font-weight: 600; }
+.lb-name .tag {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 2px 6px; border-radius: 4px; margin-left: 6px;
+  vertical-align: middle;
+}
+.lb-name .tag-you { background: var(--blue-bg); color: var(--blue); }
+.lb-name .tag-spoon { background: var(--red-bg); color: var(--red); }
+.lb-pnl { font-size: 15px; font-weight: 700; }
+.lb-trend { font-size: 12px; margin-left: 4px; }
+
+/* ── Race Calendar ── */
+.round-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; font-size: 13px; font-weight: 700;
+  color: var(--text-secondary); text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.round-header .line { flex: 1; height: 1px; background: var(--border); }
+.race-card {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; gap: 14px;
+  cursor: pointer; transition: all 0.15s;
+}
+.race-card:hover { border-color: var(--accent); }
+.race-date-badge {
+  width: 44px; text-align: center; flex-shrink: 0;
+}
+.race-date-badge .day { font-size: 18px; font-weight: 800; line-height: 1.1; }
+.race-date-badge .month { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+.race-info { flex: 1; }
+.race-name { font-size: 14px; font-weight: 700; }
+.race-meta { font-size: 12px; color: var(--text-secondary); }
+.race-status {
+  font-size: 11px; font-weight: 700; padding: 4px 10px;
+  border-radius: 6px; white-space: nowrap;
+}
+.race-status.tipped { background: var(--green-bg); color: var(--green); }
+.race-status.open { background: var(--blue-bg); color: var(--blue); }
+.race-status.locked { background: var(--surface-alt); color: var(--text-muted); }
+.race-status.settled { background: var(--accent-light); color: var(--accent); }
+.grade-badge {
+  display: inline-block; font-size: 10px; font-weight: 800;
+  padding: 1px 5px; border-radius: 3px; margin-left: 6px;
+  vertical-align: middle;
+}
+.grade-g1 { background: var(--accent); color: #fff; }
+.grade-g2 { background: #6366f1; color: #fff; }
+.grade-g3 { background: #8b5cf6; color: #fff; }
+.grade-listed { background: var(--text-muted); color: #fff; }
+
+/* ── Tip Form ── */
+.tip-budget {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--surface-alt); border-radius: var(--radius-sm);
+  padding: 14px 16px; margin-bottom: 16px;
+  border: 1px solid var(--border);
+}
+.budget-label { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+.budget-remaining { font-size: 22px; font-weight: 800; }
+.budget-remaining.valid { color: var(--green); }
+.budget-remaining.over { color: var(--red); }
+.budget-remaining.partial { color: var(--orange); }
+.tip-line {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+}
+.tip-line-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px;
+}
+.tip-line-num { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+.tip-remove { font-size: 12px; color: var(--red); cursor: pointer; font-weight: 600; background: none; border: none; }
+.field-group { margin-bottom: 10px; }
+.field-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+.field-select, .field-input {
+  width: 100%; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 8px;
+  font-size: 15px; background: var(--surface);
+  color: var(--text); appearance: none;
+  -webkit-appearance: none;
+}
+.field-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tip-summary {
+  background: var(--surface-alt); border-radius: var(--radius-sm);
+  padding: 14px 16px; margin: 16px 0;
+  border: 1px solid var(--border);
+}
+.tip-summary-line {
+  display: flex; justify-content: space-between;
+  font-size: 14px; padding: 4px 0;
+}
+.tip-summary-line .label { color: var(--text-secondary); }
+.tip-summary-line .value { font-weight: 600; }
+.tip-summary-total {
+  display: flex; justify-content: space-between;
+  font-size: 15px; font-weight: 700;
+  padding-top: 8px; margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.btn-primary {
+  width: 100%; padding: 14px;
+  background: var(--text); color: #fff;
+  border: none; border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-secondary {
+  width: 100%; padding: 12px;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.btn-add {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 12px;
+  background: none; color: var(--blue);
+  border: 1px dashed var(--blue); border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  margin-bottom: 12px;
+}
+
+/* ── All Tips (post cutoff) ── */
+.tips-user-card {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+}
+.tips-user-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.tips-user-name { font-size: 15px; font-weight: 700; }
+.tips-user-pnl { font-size: 14px; font-weight: 700; }
+.tips-bet-line {
+  display: flex; justify-content: space-between;
+  font-size: 13px; padding: 3px 0; color: var(--text-secondary);
+}
+.tips-bet-line .horse { font-weight: 600; color: var(--text); }
+.no-tip { font-size: 13px; color: var(--text-muted); font-style: italic; }
+
+/* ── Honour Roll ── */
+.honour-year {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.honour-year-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+.honour-year-badge {
+  font-size: 14px; font-weight: 800;
+  background: var(--text); color: #fff;
+  padding: 4px 12px; border-radius: 6px;
+}
+.honour-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0;
+}
+.honour-medal { font-size: 20px; width: 28px; text-align: center; }
+.honour-name { flex: 1; font-size: 14px; font-weight: 600; }
+.honour-amount { font-size: 14px; font-weight: 700; }
+.honour-spoon { opacity: 0.6; }
+.honour-awards {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.honour-award {
+  font-size: 12px; color: var(--text-secondary);
+}
+.honour-award strong { color: var(--text); font-weight: 600; }
+
+/* ── Profile ── */
+.profile-header {
+  text-align: center; padding: 24px 0;
+}
+.profile-avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #e8c96a);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 800; color: #fff;
+  margin: 0 auto 12px;
+}
+.profile-name { font-size: 22px; font-weight: 800; }
+.profile-sub { font-size: 13px; color: var(--text-secondary); }
+.profile-badge {
+  display: inline-block; margin-top: 6px;
+  padding: 4px 12px; border-radius: 6px;
+  font-size: 12px; font-weight: 700;
+  background: var(--green-bg); color: var(--green);
+}
+.profile-stats {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+  margin: 16px 0;
+}
+.profile-stat {
+  background: var(--surface); border-radius: var(--radius-sm);
+  padding: 16px; text-align: center;
+  border: 1px solid var(--border);
+}
+.profile-stat-value { font-size: 22px; font-weight: 800; }
+.profile-stat-label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* ── Admin ── */
+.admin-section { margin-bottom: 20px; }
+.admin-section h3 { font-size: 14px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+.member-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; background: var(--surface);
+  border-radius: 8px; margin-bottom: 6px;
+  border: 1px solid var(--border);
+}
+.member-name { flex: 1; font-size: 14px; font-weight: 600; }
+.member-badge {
+  font-size: 11px; font-weight: 700; padding: 3px 8px;
+  border-radius: 5px;
+}
+.member-badge.paid { background: var(--green-bg); color: var(--green); }
+.member-badge.unpaid { background: var(--red-bg); color: var(--red); }
+
+/* ── Animations ── */
+@keyframes slideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.card, .race-card, .lb-row, .honour-year { animation: slideIn 0.3s ease; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 0; }
+
+/* ── Desktop ── */
+@media (min-width: 640px) {
+  .page { padding: 24px; }
+  .stats-row { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <div class="header-left">
+    <button class="menu-btn" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="header-title"><em>Group 1</em> Club</div>
+  </div>
+  <div class="header-right">
+    <button class="notif-btn" onclick="showPage('notifications')">
+      🔔<span class="notif-badge"></span>
+    </button>
+    <div class="avatar" onclick="showPage('profile')">L</div>
+  </div>
+</div>
+
+<!-- ── MENU OVERLAY ── -->
+<div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()">
+  <div class="menu-drawer" onclick="event.stopPropagation()">
+    <div class="menu-header">
+      <h2><em>Group 1</em> Club</h2>
+      <p>🏇 Tipping winners since… never</p>
+    </div>
+    <div class="menu-items">
+      <button class="menu-item active" data-page="home" onclick="showPage('home')">
+        <span class="icon">🏠</span> Home
+      </button>
+      <button class="menu-item" data-page="races" onclick="showPage('races')">
+        <span class="icon">📋</span> Races
+      </button>
+      <button class="menu-item" data-page="leaderboard" onclick="showPage('leaderboard')">
+        <span class="icon">🏆</span> Leaderboard
+      </button>
+      <button class="menu-item" data-page="tips-all" onclick="showPage('tips-all')">
+        <span class="icon">👀</span> Who Tipped Who
+      </button>
+      <button class="menu-item" data-page="honour-roll" onclick="showPage('honour-roll')">
+        <span class="icon">📜</span> Honour Roll
+      </button>
+      <div class="menu-divider"></div>
+      <button class="menu-item" data-page="profile" onclick="showPage('profile')">
+        <span class="icon">👤</span> My Profile
+      </button>
+      <button class="menu-item" data-page="admin" onclick="showPage('admin')">
+        <span class="icon">⚙️</span> Admin
+      </button>
+    </div>
+    <div class="menu-footer">
+      © 2026 Merc & Mills · group1club.com
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ── HOME PAGE ── -->
+<!-- ══════════════════════════════════════════ -->
+<div class="page active" id="page-home">
+  <div class="banner">
+    <div class="banner-label">🔴 Race Day — Round 9</div>
+    <div class="banner-title">Caulfield Cup Day</div>
+    <div class="banner-detail">4 races · Caulfield & Randwick · Oct 18</div>
+    <div class="banner-countdown">⏱ Tips close in <strong>2h 14m</strong></div>
+    <br>
+    <button class="banner-btn" onclick="showPage('tip-form')">Tip Now →</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon">🥇</div>
+      <div class="stat-value">1st</div>
+      <div class="stat-label">Rank</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💰</div>
+      <div class="stat-value green">+$2,839</div>
+      <div class="stat-label">Total P&L</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-value">7/13</div>
+      <div class="stat-label">Consistency</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📊 Latest Results</div>
+      <div class="card-subtitle">Round 8</div>
+    </div>
+    <div class="result-item">
+      <div class="result-icon win">🏇</div>
+      <div class="result-info">
+        <div class="result-race">Caulfield Guineas</div>
+        <div class="result-detail">$60 WIN on RIVER THAMES · $7.20 BSP</div>
+      </div>
+      <div class="result-pnl green">+$332</div>
+    </div>
+    <div class="result-item">
+      <div class="result-icon loss">💨</div>
+      <div class="result-info">
+        <div class="result-race">Caulfield Stakes</div>
+        <div class="result-detail">$100 WIN on VIA SISTINA · Unplaced</div>
+      </div>
+      <div class="result-pnl red">-$100</div>
+    </div>
+    <div class="result-item">
+      <div class="result-icon win">🏇</div>
+      <div class="result-info">
+        <div class="result-race">Toorak Handicap</div>
+        <div class="result-detail">$40 PLC on GIGA KICK · $2.10 BSP</div>
+      </div>
+      <div class="result-pnl green">+$84</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📰 News</div>
+    </div>
+    <div class="result-item">
+      <div class="result-icon" style="background:var(--accent-light)">📝</div>
+      <div class="result-info">
+        <div class="result-race">Twiggy means business 👔💵</div>
+        <div class="result-detail">Round 12 recap — 8 races remain · by Merc</div>
+      </div>
+    </div>
+    <div class="result-item">
+      <div class="result-icon" style="background:var(--blue-bg)">🗳️</div>
+      <div class="result-info">
+        <div class="result-race">Weekly Poll Results</div>
+        <div class="result-detail">Who's your dark horse for the Cup? · by Merc</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ── RACES PAGE ── -->
+<!-- ══════════════════════════════════════════ -->
+<div class="page" id="page-races">
+  <div class="page-title">🏁 Races</div>
+
+  <div class="round-header"><span>Round 9 — Oct 18</span><div class="line"></div></div>
+
+  <div class="race-card" onclick="showPage('tip-form')">
+    <div class="race-date-badge"><div class="day">18</div><div class="month">Oct</div></div>
+    <div class="race-info">
+      <div class="race-name">Caulfield Cup <span class="grade-badge grade-g1">G1</span></div>
+      <div class="race-meta">Caulfield · 2400m · 3:15pm</div>
+    </div>
+    <div class="race-status open">Tip Now</div>
+  </div>
+
+  <div class="race-card" onclick="showPage('tip-form')">
+    <div class="race-date-badge"><div class="day">18</div><div class="month">Oct</div></div>
+    <div class="race-info">
+      <div class="race-name">Thousand Guineas <span class="grade-badge grade-g1">G1</span></div>
+      <div class="race-meta">Caulfield · 1600m · 2:35pm</div>
+    </div>
+    <div class="race-status open">Tip Now</div>
+  </div>
+
+  <div class="race-card" onclick="showPage('tip-form')">
+    <div class="race-date-badge"><div class="day">18</div><div class="month">Oct</div></div>
+    <div class="race-info">
+      <div class="race-name">The Everest <span class="grade-badge grade-g1">G1</span></div>
+      <div class="race-meta">Randwick · 1200m · 4:15pm</div>
+    </div>
+    <div class="race-status tipped">✓ Tipped</div>
+  </div>
+
+  <div class="race-card" onclick="showPage('tip-form')">
+    <div class="race-date-badge"><div class="day">18</div><div class="month">Oct</div></div>
+    <div class="race-info">
+      <div class="race-name">King Charles III Stakes <span class="grade-badge grade-g1">G1</span></div>
+      <div class="race-meta">Randwick · 1600m · 3:40pm</div>
+    </div>
+    <div class="race-status open">Tip Now</div>
+  </div>
+
+  <div class="round-header"><span>Round 8 — Oct 11</span><div class="line"></div></div>
+
+  <div class="race-card">
+    <div class="race-date-badge"><div class="day">11</div><div class="month">Oct</div></div>
+    <div class="race-info">
+      <div class="race-name">Caulfield Guineas <span class="grade-badge grade-g1">G1</span></div>
+      <div class="race-meta">Caulfield · 1600m</div>
+    </div>
+    <div class="race-status settled">+$332</div>
+  </div>
+
+  <div class="race-card">
+    <div class="race-date-badge"><div class="day">11</div><div class="month">Oct</div></div>
+    <div class="race-info">
+      <div class="race-name">Caulfield Stakes <span class="grade-badge grade-g1">G1</span></div>
+      <div class="race-meta">Caulfield · 2000m</div>
+    </div>
+    <div class="race-status settled" style="background:var(--red-bg);color:var(--red)">-$100</div>
+  </div>
+
+  <div class="race-card">
+    <div class="race-date-badge"><div class="day">11</div><div class="month">Oct</div></div>
+    <div class="race-info">
+      <div class="race-name">Toorak Handicap <span class="grade-badge grade-g1">G1</span></div>
+      <div class="race-meta">Caulfield · 1600m</div>
+    </div>
+    <div class="race-status settled">+$84</div>
+  </div>
+
+  <div class="round-header"><span>Round 7 — Oct 4</span><div class="line"></div></div>
+
+  <div class="race-card">
+    <div class="race-date-badge"><div class="day">4</div><div class="month">Oct</div></div>
+    <div class="race-info">
+      <div class="race-name">Turnbull Stakes <span class="grade-badge grade-g1">G1</span></div>
+      <div class="race-meta">Flemington · 2000m</div>
+    </div>
+    <div class="race-status settled">+$185</div>
+  </div>
+
+  <div class="race-card">
+    <div class="race-date-badge"><div class="day">4</div><div class="month">Oct</div></div>
+    <div class="race-info">
+      <div class="race-name">Epsom Handicap <span class="grade-badge grade-g1">G1</span></div>
+      <div class="race-meta">Randwick · 1600m</div>
+    </div>
+    <div class="race-status settled" style="background:var(--red-bg);color:var(--red)">-$100</div>
+  </div>
+
+  <div class="race-card">
+    <div class="race-date-badge"><div class="day">4</div><div class="month">Oct</div></div>
+    <div class="race-info">
+      <div class="race-name">The Metropolitan <span class="grade-badge grade-g1">G1</span></div>
+      <div class="race-meta">Randwick · 2400m</div>
+    </div>
+    <div class="race-status settled">+$220</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ── TIP FORM PAGE ── -->
+<!-- ══════════════════════════════════════════ -->
+<div class="page" id="page-tip-form">
+  <button class="btn-secondary" onclick="showPage('races')" style="width:auto;padding:8px 16px;margin-bottom:16px;font-size:13px">← Back to Races</button>
+
+  <div class="card" style="border-left:3px solid var(--accent)">
+    <div style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">🏆 Group 1</div>
+    <div style="font-size:20px;font-weight:800;margin-bottom:2px">Caulfield Cup</div>
+    <div style="font-size:14px;color:var(--text-secondary)">Caulfield · 2400m · Sat Oct 18 · 3:15pm</div>
+    <div style="font-size:13px;color:var(--orange);font-weight:600;margin-top:6px">⏱ Tips close in 2h 14m</div>
+  </div>
+
+  <div class="tip-budget">
+    <div>
+      <div class="budget-label">Race Budget</div>
+      <div style="font-size:12px;color:var(--text-muted)">$100 per race</div>
+    </div>
+    <div>
+      <div class="budget-label">Remaining</div>
+      <div class="budget-remaining valid">$0</div>
+    </div>
+  </div>
+
+  <div class="tip-line">
+    <div class="tip-line-header">
+      <div class="tip-line-num">Bet 1</div>
+      <button class="tip-remove">Remove</button>
+    </div>
+    <div class="field-group">
+      <div class="field-label">Horse</div>
+      <select class="field-select">
+        <option>GRINGOTTS (7)</option>
+        <option>VAUBAN (3)</option>
+        <option>WITHOUT A FIGHT (1)</option>
+        <option>BUCKAROO (4)</option>
+        <option>LAND LEGEND (11)</option>
+        <option>CIRCLE OF FIRE (9)</option>
+        <option>MOSTLY CLOUDY (15)</option>
+      </select>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <div class="field-label">Type</div>
+        <select class="field-select">
+          <option>Win</option>
+          <option>Place</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Amount ($)</div>
+        <input class="field-input" type="number" value="60" inputmode="numeric">
+      </div>
+    </div>
+    <div class="field-group">
+      <div class="field-label">Backup Horse</div>
+      <select class="field-select">
+        <option>VAUBAN (3)</option>
+        <option>WITHOUT A FIGHT (1)</option>
+        <option>BUCKAROO (4)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="tip-line">
+    <div class="tip-line-header">
+      <div class="tip-line-num">Bet 2</div>
+      <button class="tip-remove">Remove</button>
+    </div>
+    <div class="field-group">
+      <div class="field-label">Horse</div>
+      <select class="field-select">
+        <option>WITHOUT A FIGHT (1)</option>
+        <option>VAUBAN (3)</option>
+        <option>GRINGOTTS (7)</option>
+      </select>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <div class="field-label">Type</div>
+        <select class="field-select">
+          <option>Place</option>
+          <option>Win</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Amount ($)</div>
+        <input class="field-input" type="number" value="40" inputmode="numeric">
+      </div>
+    </div>
+    <div class="field-group">
+      <div class="field-label">Backup Horse</div>
+      <select class="field-select">
+        <option>BUCKAROO (4)</option>
+        <option>LAND LEGEND (11)</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="btn-add">+ Add Another Bet <span style="font-size:11px;color:var(--text-muted)">(max 4)</span></button>
+
+  <div class="tip-summary">
+    <div class="tip-summary-line"><span class="label">$60 WIN</span><span class="value">Gringotts</span></div>
+    <div class="tip-summary-line"><span class="label">$40 PLC</span><span class="value">Without A Fight</span></div>
+    <div class="tip-summary-total"><span>Total</span><span style="color:var(--green)">$100 ✓</span></div>
+  </div>
+
+  <button class="btn-primary">Submit Tips</button>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ── LEADERBOARD PAGE ── -->
+<!-- ══════════════════════════════════════════ -->
+<div class="page" id="page-leaderboard">
+  <div class="page-title">🏆 Leaderboard</div>
+
+  <div class="lb-filters">
+    <div class="lb-filter active">Overall</div>
+    <div class="lb-filter">Round 8</div>
+    <div class="lb-filter">Cup Week</div>
+    <div class="lb-filter">Consistency</div>
+  </div>
+
+  <div class="lb-row top3 highlight">
+    <div class="lb-pos gold">🥇</div>
+    <div class="lb-name">Law <span class="tag tag-you">YOU</span></div>
+    <div class="lb-pnl green">+$2,839<span class="lb-trend">▲</span></div>
+  </div>
+  <div class="lb-row top3">
+    <div class="lb-pos gold">🥈</div>
+    <div class="lb-name">TheCat</div>
+    <div class="lb-pnl green">+$1,738<span class="lb-trend">▼</span></div>
+  </div>
+  <div class="lb-row top3">
+    <div class="lb-pos gold">🥉</div>
+    <div class="lb-name">Chriso</div>
+    <div class="lb-pnl green">+$951</div>
+  </div>
+  <div class="lb-row">
+    <div class="lb-pos">4</div>
+    <div class="lb-name">Dogbet</div>
+    <div class="lb-pnl green">+$852</div>
+  </div>
+  <div class="lb-row">
+    <div class="lb-pos">5</div>
+    <div class="lb-name">Kilsby</div>
+    <div class="lb-pnl green">+$581</div>
+  </div>
+  <div class="lb-row">
+    <div class="lb-pos">6</div>
+    <div class="lb-name">Summerdays</div>
+    <div class="lb-pnl green">+$510</div>
+  </div>
+  <div class="lb-row">
+    <div class="lb-pos">7</div>
+    <div class="lb-name">Freezer</div>
+    <div class="lb-pnl green">+$491</div>
+  </div>
+  <div class="lb-row">
+    <div class="lb-pos">8</div>
+    <div class="lb-name">Brockylogan</div>
+    <div class="lb-pnl green">+$374</div>
+  </div>
+  <div class="lb-row">
+    <div class="lb-pos">9</div>
+    <div class="lb-name">Billymacca</div>
+    <div class="lb-pnl green">+$115</div>
+  </div>
+  <div class="lb-row">
+    <div class="lb-pos">10</div>
+    <div class="lb-name">Benny Leal</div>
+    <div class="lb-pnl green">+$15</div>
+  </div>
+  <div style="text-align:center;font-size:13px;color:var(--text-muted);padding:8px 0">⋯ 43 more tipsters ⋯</div>
+  <div class="lb-row" style="opacity:0.7">
+    <div class="lb-pos">52</div>
+    <div class="lb-name">Gav</div>
+    <div class="lb-pnl red">-$3,820</div>
+  </div>
+  <div class="lb-row" style="border-color:var(--red)">
+    <div class="lb-pos">53</div>
+    <div class="lb-name">Simmo <span class="tag tag-spoon">🥄 x4</span></div>
+    <div class="lb-pnl red">-$4,900</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ── WHO TIPPED WHO PAGE ── -->
+<!-- ══════════════════════════════════════════ -->
+<div class="page" id="page-tips-all">
+  <div class="page-title">👀 Who Tipped Who</div>
+  <div style="margin-bottom:12px">
+    <select class="field-select" style="font-size:14px;font-weight:600">
+      <option>Caulfield Guineas — Round 8</option>
+      <option>Caulfield Stakes — Round 8</option>
+      <option>Toorak Handicap — Round 8</option>
+    </select>
+  </div>
+
+  <div style="padding:8px 0;font-size:13px;color:var(--text-secondary)">
+    🏇 <strong>1st:</strong> RIVER THAMES ($7.20) · <strong>2nd:</strong> GIGA KICK ($2.10) · <strong>3rd:</strong> SHARP NOIR ($4.80)
+  </div>
+
+  <div class="tips-user-card" style="border-color:var(--accent)">
+    <div class="tips-user-header">
+      <div class="tips-user-name">Law <span class="tag tag-you" style="font-size:10px">YOU</span></div>
+      <div class="tips-user-pnl green">+$332</div>
+    </div>
+    <div class="tips-bet-line"><span class="horse">$60 WIN River Thames</span><span style="color:var(--green)">✓ $432</span></div>
+    <div class="tips-bet-line"><span class="horse">$40 PLC Giga Kick</span><span style="color:var(--green)">✓ $84</span></div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Backup: Vauban (not used)</div>
+  </div>
+
+  <div class="tips-user-card">
+    <div class="tips-user-header">
+      <div class="tips-user-name">TheCat</div>
+      <div class="tips-user-pnl red">-$100</div>
+    </div>
+    <div class="tips-bet-line"><span class="horse">$100 WIN Buckaroo</span><span style="color:var(--red)">✗ Unplaced</span></div>
+  </div>
+
+  <div class="tips-user-card">
+    <div class="tips-user-header">
+      <div class="tips-user-name">Dogbet</div>
+      <div class="tips-user-pnl green">+$110</div>
+    </div>
+    <div class="tips-bet-line"><span class="horse">$50 WIN River Thames</span><span style="color:var(--green)">✓ $360</span></div>
+    <div class="tips-bet-line"><span class="horse">$50 PLC Sharp Noir</span><span style="color:var(--red)">✗ 3rd, no plc</span></div>
+  </div>
+
+  <div class="tips-user-card">
+    <div class="tips-user-header">
+      <div class="tips-user-name">Chriso</div>
+      <div class="tips-user-pnl red">-$100</div>
+    </div>
+    <div class="tips-bet-line"><span class="horse">$70 WIN Via Sistina</span><span style="color:var(--red)">✗ Unplaced</span></div>
+    <div class="tips-bet-line"><span class="horse">$30 PLC Via Sistina</span><span style="color:var(--red)">✗ Unplaced</span></div>
+  </div>
+
+  <div class="tips-user-card" style="opacity:0.5">
+    <div class="tips-user-header">
+      <div class="tips-user-name">Simmo</div>
+      <div class="tips-user-pnl red">-$100</div>
+    </div>
+    <div class="no-tip">No tip submitted</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ── HONOUR ROLL PAGE ── -->
+<!-- ══════════════════════════════════════════ -->
+<div class="page" id="page-honour-roll">
+  <div class="page-title">📜 The Golden Ponies</div>
+
+  <div class="honour-year">
+    <div class="honour-year-header"><span class="honour-year-badge">2025</span><span style="font-size:12px;color:var(--text-muted);margin-left:8px">53 entrants · 42 races</span></div>
+    <div class="honour-row"><div class="honour-medal">🏆</div><div class="honour-name">Law</div><div class="honour-amount green">+$3,055.10</div></div>
+    <div class="honour-row"><div class="honour-medal">🥈</div><div class="honour-name">TheCat</div><div class="honour-amount green">+$1,437.60</div></div>
+    <div class="honour-row"><div class="honour-medal">🥉</div><div class="honour-name">Chriso</div><div class="honour-amount green">+$1,274.00</div></div>
+    <div class="honour-row honour-spoon"><div class="honour-medal">🥄</div><div class="honour-name">Simmo <span style="font-size:11px;color:var(--text-muted)">(4th spoon)</span></div><div class="honour-amount red">-$4,900.00</div></div>
+    <div class="honour-awards">
+      <div class="honour-award">🎖️ <strong>Consistency:</strong> Law</div>
+      <div class="honour-award">🏅 <strong>Cup Week:</strong> Law</div>
+    </div>
+  </div>
+
+  <div class="honour-year">
+    <div class="honour-year-header"><span class="honour-year-badge">2024</span><span style="font-size:12px;color:var(--text-muted);margin-left:8px">44 entrants · 47 races</span></div>
+    <div class="honour-row"><div class="honour-medal">🏆</div><div class="honour-name">Snake</div><div class="honour-amount green">+$3,959.20</div></div>
+    <div class="honour-row"><div class="honour-medal">🥈</div><div class="honour-name">Rusty</div><div class="honour-amount green">+$3,239.10</div></div>
+    <div class="honour-row"><div class="honour-medal">🥉</div><div class="honour-name">—</div><div class="honour-amount">—</div></div>
+    <div class="honour-row honour-spoon"><div class="honour-medal">🥄</div><div class="honour-name">Gav</div><div class="honour-amount red">-$4,035.00</div></div>
+    <div class="honour-awards">
+      <div class="honour-award">🎖️ <strong>Consistency:</strong> Killa</div>
+      <div class="honour-award">🏅 <strong>Cup Week:</strong> Ovs</div>
+    </div>
+  </div>
+
+  <div class="honour-year">
+    <div class="honour-year-header"><span class="honour-year-badge">2023</span><span style="font-size:12px;color:var(--text-muted);margin-left:8px">42 entrants · 47 races</span></div>
+    <div class="honour-row"><div class="honour-medal">🏆</div><div class="honour-name">Austin</div><div class="honour-amount green">+$5,864.00</div></div>
+    <div class="honour-row"><div class="honour-medal">🥈</div><div class="honour-name">Wardy</div><div class="honour-amount green">+$4,411.90</div></div>
+    <div class="honour-row honour-spoon"><div class="honour-medal">🥄</div><div class="honour-name">TeeDee</div><div class="honour-amount red">-$4,700.00</div></div>
+    <div class="honour-awards">
+      <div class="honour-award">🎖️ <strong>Consistency:</strong> Chriso</div>
+      <div class="honour-award">🏅 <strong>Cup Week:</strong> The Cat</div>
+    </div>
+  </div>
+
+  <div class="honour-year">
+    <div class="honour-year-header"><span class="honour-year-badge">2022</span><span style="font-size:12px;color:var(--text-muted);margin-left:8px">51 entrants · 51 races</span></div>
+    <div class="honour-row"><div class="honour-medal">🏆</div><div class="honour-name">Worm</div><div class="honour-amount green">+$2,833.50</div></div>
+    <div class="honour-row"><div class="honour-medal">🥈</div><div class="honour-name">SimBetTM</div><div class="honour-amount green">+$2,609.00</div></div>
+    <div class="honour-row honour-spoon"><div class="honour-medal">🥄</div><div class="honour-name">Mayesy</div><div class="honour-amount red">-$3,265.00</div></div>
+    <div class="honour-awards">
+      <div class="honour-award">🎖️ <strong>Consistency:</strong> Sim Shaw</div>
+      <div class="honour-award">🏅 <strong>Cup Week:</strong> Chriso</div>
+    </div>
+  </div>
+
+  <div class="honour-year">
+    <div class="honour-year-header"><span class="honour-year-badge">2021</span></div>
+    <div class="honour-row"><div class="honour-medal">🏆</div><div class="honour-name">Rodda</div><div class="honour-amount green">+$2,168.40</div></div>
+    <div class="honour-row"><div class="honour-medal">🥈</div><div class="honour-name">Nelso</div><div class="honour-amount green">+$2,114.00</div></div>
+    <div class="honour-row honour-spoon"><div class="honour-medal">🥄</div><div class="honour-name">Simmo</div><div class="honour-amount red">-$3,278.00</div></div>
+  </div>
+
+  <div class="honour-year">
+    <div class="honour-year-header"><span class="honour-year-badge">2020</span></div>
+    <div class="honour-row"><div class="honour-medal">🏆</div><div class="honour-name">Ciaran</div><div class="honour-amount green">+$2,252.50</div></div>
+    <div class="honour-row"><div class="honour-medal">🥈</div><div class="honour-name">Skinny</div><div class="honour-amount green">+$1,745.00</div></div>
+    <div class="honour-row honour-spoon"><div class="honour-medal">🥄</div><div class="honour-name">Doc</div><div class="honour-amount red">-$3,570.00</div></div>
+  </div>
+
+  <div class="honour-year">
+    <div class="honour-year-header"><span class="honour-year-badge">2019</span></div>
+    <div class="honour-row"><div class="honour-medal">🏆</div><div class="honour-name">Rodda</div><div class="honour-amount green">+$1,696.00</div></div>
+    <div class="honour-row honour-spoon"><div class="honour-medal">🥄</div><div class="honour-name">Simmo</div><div class="honour-amount red">-$3,399.62</div></div>
+  </div>
+
+  <div class="honour-year">
+    <div class="honour-year-header"><span class="honour-year-badge">2018</span></div>
+    <div class="honour-row"><div class="honour-medal">🏆</div><div class="honour-name">Law</div><div class="honour-amount green">+$3,069.44</div></div>
+    <div class="honour-row honour-spoon"><div class="honour-medal">🥄</div><div class="honour-name">Rodda</div><div class="honour-amount red">-$2,586.00</div></div>
+  </div>
+
+  <div class="honour-year">
+    <div class="honour-year-header"><span class="honour-year-badge">2017</span></div>
+    <div class="honour-row"><div class="honour-medal">🏆</div><div class="honour-name">Miller<span style="font-size:11px;color:var(--text-muted)"> *</span></div><div class="honour-amount green">+$1,197.00</div></div>
+    <div class="honour-row honour-spoon"><div class="honour-medal">🥄</div><div class="honour-name">Simmo</div><div class="honour-amount red">-$2,528.00</div></div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:6px;font-style:italic">* Won under dubious circumstances — no official Golden Pony awarded</div>
+  </div>
+
+  <div class="honour-year">
+    <div class="honour-year-header"><span class="honour-year-badge">2016</span></div>
+    <div class="honour-row"><div class="honour-medal">🏆</div><div class="honour-name">Rodda</div><div class="honour-amount green">+$1,248.00</div></div>
+    <div class="honour-row honour-spoon"><div class="honour-medal">🥄</div><div class="honour-name">Ian Macca</div><div class="honour-amount red">-$2,160.00</div></div>
+  </div>
+
+  <div class="card" style="text-align:center;padding:24px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:8px">🐴 Multi-Time Winners</div>
+    <div style="font-size:14px;color:var(--text-secondary)">
+      <strong>Rodda</strong> — 3x Champion (2016, 2019, 2021)<br>
+      <strong>Law</strong> — 2x Champion (2018, 2025)<br>
+      <strong>Simmo</strong> — 4x Wooden Spoon 🥄 (2017, 2019, 2021, 2025)
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ── PROFILE PAGE ── -->
+<!-- ══════════════════════════════════════════ -->
+<div class="page" id="page-profile">
+  <div class="profile-header">
+    <div class="profile-avatar">L</div>
+    <div class="profile-name">Law</div>
+    <div class="profile-sub">Member since 2016</div>
+    <div class="profile-badge">✅ Financial — 2026</div>
+  </div>
+
+  <div class="profile-stats">
+    <div class="profile-stat">
+      <div class="profile-stat-value" style="color:var(--accent)">2</div>
+      <div class="profile-stat-label">🏆 Titles</div>
+    </div>
+    <div class="profile-stat">
+      <div class="profile-stat-value green">+$6,124</div>
+      <div class="profile-stat-label">Career P&L</div>
+    </div>
+    <div class="profile-stat">
+      <div class="profile-stat-value">8</div>
+      <div class="profile-stat-label">Carnivals</div>
+    </div>
+    <div class="profile-stat">
+      <div class="profile-stat-value">24%</div>
+      <div class="profile-stat-label">Win Rate</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="margin-bottom:12px">⚙️ Settings</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:14px">Push Notifications</span>
+      <span style="font-size:13px;color:var(--green);font-weight:600">Enabled</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:14px">Email Notifications</span>
+      <span style="font-size:13px;color:var(--green);font-weight:600">Enabled</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
+      <span style="font-size:14px">Email</span>
+      <span style="font-size:13px;color:var(--text-muted)">law@email.com</span>
+    </div>
+  </div>
+
+  <button class="btn-secondary" style="margin-top:8px">Change Password</button>
+  <button class="btn-secondary" style="margin-top:8px;color:var(--red);border-color:var(--red)">Log Out</button>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ── ADMIN PAGE ── -->
+<!-- ══════════════════════════════════════════ -->
+<div class="page" id="page-admin">
+  <div class="page-title">⚙️ Admin</div>
+
+  <div class="admin-section">
+    <h3>Members (53)</h3>
+    <div class="field-group" style="margin-bottom:10px">
+      <input class="field-input" placeholder="Search members..." style="font-size:14px">
+    </div>
+    <div class="member-row"><div class="member-name">Law</div><span class="member-badge paid">✅ Paid</span></div>
+    <div class="member-row"><div class="member-name">TheCat</div><span class="member-badge paid">✅ Paid</span></div>
+    <div class="member-row"><div class="member-name">Chriso</div><span class="member-badge paid">✅ Paid</span></div>
+    <div class="member-row"><div class="member-name">NewGuy2026</div><span class="member-badge unpaid">⚠️ Unpaid</span></div>
+    <div class="member-row"><div class="member-name">Simmo</div><span class="member-badge paid">✅ Paid</span></div>
+    <div style="text-align:center;padding:8px 0">
+      <button class="btn-primary" style="width:auto;padding:10px 24px;font-size:13px">Generate Invite Code</button>
+    </div>
+  </div>
+
+  <div class="admin-section">
+    <h3>Carnival</h3>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:16px;font-weight:700">2026 Spring Carnival</div>
+        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:5px;background:var(--green-bg);color:var(--green)">Active</span>
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary)">14 rounds · 42 races · Aug 23 – Nov 14</div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn-secondary" style="font-size:13px;padding:8px 16px">Edit Rounds</button>
+        <button class="btn-secondary" style="font-size:13px;padding:8px 16px">Sync Fields</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-section">
+    <h3>Manual Override</h3>
+    <div class="card">
+      <div class="field-group">
+        <div class="field-label">Select Race</div>
+        <select class="field-select"><option>Caulfield Cup — Oct 18</option><option>Thousand Guineas — Oct 18</option></select>
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:8px">Enter results manually if Betfair API is delayed</div>
+      <button class="btn-secondary" style="margin-top:10px;font-size:13px">Enter Result</button>
+    </div>
+  </div>
+
+  <div class="admin-section">
+    <h3>Announcements</h3>
+    <div class="card">
+      <div class="field-group">
+        <div class="field-label">Title</div>
+        <input class="field-input" placeholder="e.g. Round 9 Preview">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Message</div>
+        <textarea class="field-input" rows="3" placeholder="Write your announcement..." style="resize:vertical"></textarea>
+      </div>
+      <button class="btn-primary" style="margin-top:8px;font-size:13px">Send to All Members</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- ── NOTIFICATIONS PAGE ── -->
+<!-- ══════════════════════════════════════════ -->
+<div class="page" id="page-notifications">
+  <div class="page-title">🔔 Notifications</div>
+
+  <div class="card" style="border-left:3px solid var(--blue)">
+    <div style="font-size:13px;color:var(--blue);font-weight:600">Just now</div>
+    <div style="font-size:14px;font-weight:600;margin-top:4px">Fields up for Round 9!</div>
+    <div style="font-size:13px;color:var(--text-secondary)">Caulfield Cup, Thousand Guineas, The Everest, and King Charles III Stakes. Fields now available for tipping.</div>
+  </div>
+
+  <div class="card" style="border-left:3px solid var(--green)">
+    <div style="font-size:13px;color:var(--text-muted);font-weight:600">2 days ago</div>
+    <div style="font-size:14px;font-weight:600;margin-top:4px">Round 8 settled! 🏇</div>
+    <div style="font-size:13px;color:var(--text-secondary)">Caulfield Guineas, Caulfield Stakes, Toorak Handicap. Your round P&L: <strong style="color:var(--green)">+$316</strong></div>
+  </div>
+
+  <div class="card" style="border-left:3px solid var(--orange)">
+    <div style="font-size:13px;color:var(--text-muted);font-weight:600">3 days ago</div>
+    <div style="font-size:14px;font-weight:600;margin-top:4px">⚠️ Scratching: ANAMOE</div>
+    <div style="font-size:13px;color:var(--text-secondary)">Your pick in the Caulfield Stakes has been scratched. Update your tip before cutoff.</div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:13px;color:var(--text-muted);font-weight:600">5 days ago</div>
+    <div style="font-size:14px;font-weight:600;margin-top:4px">Tip confirmed ✓</div>
+    <div style="font-size:13px;color:var(--text-secondary)">Your tips for Round 8 have been submitted: $60 WIN River Thames, $40 PLC Giga Kick (Caulfield Guineas)</div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:13px;color:var(--text-muted);font-weight:600">1 week ago</div>
+    <div style="font-size:14px;font-weight:600;margin-top:4px">📰 New post by Merc</div>
+    <div style="font-size:13px;color:var(--text-secondary)">"Twiggy means business 👔💵" — Round 7 recap is live.</div>
+  </div>
+</div>
+
+<script>
+function toggleMenu() {
+  document.getElementById('menuOverlay').classList.toggle('open');
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.menu-item').forEach(m => {
+    m.classList.toggle('active', m.dataset.page === name);
+  });
+  document.getElementById('menuOverlay').classList.remove('open');
+  window.scrollTo(0, 0);
+}
+
+// Filter pills
+document.querySelectorAll('.lb-filter').forEach(f => {
+  f.addEventListener('click', () => {
+    document.querySelectorAll('.lb-filter').forEach(x => x.classList.remove('active'));
+    f.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
