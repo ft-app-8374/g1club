@@ -142,9 +142,10 @@ export async function POST(req: Request) {
       runnersAdded: totalRunners,
     });
   } catch (error) {
-    console.error("Fetch fields error:", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("Fetch fields error:", msg);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", detail: msg },
       { status: 500 }
     );
   }
