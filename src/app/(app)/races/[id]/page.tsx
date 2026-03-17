@@ -18,7 +18,7 @@ export default async function RaceDetailPage({
     where: { id: params.id },
     include: {
       round: true,
-      runners: { orderBy: { barrier: "asc" } },
+      runners: { orderBy: { runnerNumber: "asc" } },
       results: { include: { runner: true }, orderBy: { finishPosition: "asc" } },
     },
   });
@@ -183,7 +183,7 @@ export default async function RaceDetailPage({
             >
               <div className="flex items-center gap-2">
                 <span className="w-6 text-center text-slate-400 text-xs">
-                  {r.barrier || "-"}
+                  {r.runnerNumber || "-"}
                 </span>
                 <span className={r.isScratched ? "text-slate-400" : "text-slate-800"}>
                   {r.name}
@@ -215,6 +215,7 @@ export default async function RaceDetailPage({
             id: r.id,
             name: r.name,
             barrier: r.barrier,
+            runnerNumber: r.runnerNumber,
           }))}
           existingTip={
             myTip

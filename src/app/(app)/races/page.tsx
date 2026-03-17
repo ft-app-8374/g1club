@@ -117,7 +117,7 @@ export default async function RacesPage() {
                             {profit >= 0 ? "+" : ""}${profit.toFixed(0)}
                           </span>
                         ) : (
-                          <StatusBadge status={race.status} hasTipped={hasTipped} />
+                          <TipButton status={race.status} hasTipped={hasTipped} />
                         )}
                       </div>
                     </div>
@@ -142,10 +142,28 @@ export default async function RacesPage() {
   );
 }
 
-function StatusBadge({ status, hasTipped }: { status: string; hasTipped: boolean }) {
+function TipButton({ status, hasTipped }: { status: string; hasTipped: boolean }) {
+  if (status === "open" && !hasTipped) {
+    return (
+      <span className="text-sm font-bold px-4 py-2 rounded-lg bg-gold text-white shadow-sm">
+        Tip Now
+      </span>
+    );
+  }
+
+  if (status === "open" && hasTipped) {
+    return (
+      <span className="flex flex-col items-center gap-0.5">
+        <span className="text-sm font-semibold px-3 py-1.5 rounded-lg bg-green-50 text-profit border border-green-200">
+          &#10003; Tipped
+        </span>
+        <span className="text-[10px] text-slate-400">tap to edit</span>
+      </span>
+    );
+  }
+
   const styles: Record<string, string> = {
     upcoming: "bg-slate-100 text-slate-500",
-    open: hasTipped ? "bg-green-50 text-profit" : "bg-gold-accent text-gold",
     closed: "bg-slate-100 text-slate-500",
     final: "bg-green-50 text-profit",
     abandoned: "bg-slate-100 text-slate-400",
@@ -153,7 +171,6 @@ function StatusBadge({ status, hasTipped }: { status: string; hasTipped: boolean
 
   const labels: Record<string, string> = {
     upcoming: "TBA",
-    open: hasTipped ? "Tipped" : "Tip Now",
     closed: "Locked",
     final: "Result",
     abandoned: "Void",
@@ -161,7 +178,7 @@ function StatusBadge({ status, hasTipped }: { status: string; hasTipped: boolean
 
   return (
     <span
-      className={`text-xs px-2 py-0.5 rounded font-medium ${styles[status] || styles.upcoming}`}
+      className={`text-xs px-2 py-1 rounded font-medium ${styles[status] || styles.upcoming}`}
     >
       {labels[status] || status}
     </span>

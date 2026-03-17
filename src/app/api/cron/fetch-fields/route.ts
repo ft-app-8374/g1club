@@ -117,6 +117,9 @@ export async function POST(req: Request) {
             barrier: runner.metadata?.STALL_DRAW
               ? parseInt(runner.metadata.STALL_DRAW)
               : null,
+            runnerNumber: runner.metadata?.CLOTH_NUMBER
+              ? parseInt(runner.metadata.CLOTH_NUMBER)
+              : 0,
           },
           create: {
             raceId: race.id,
@@ -130,6 +133,9 @@ export async function POST(req: Request) {
             barrier: runner.metadata?.STALL_DRAW
               ? parseInt(runner.metadata.STALL_DRAW)
               : null,
+            runnerNumber: runner.metadata?.CLOTH_NUMBER
+              ? parseInt(runner.metadata.CLOTH_NUMBER)
+              : 0,
           },
         });
         totalRunners++;

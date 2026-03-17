@@ -181,6 +181,82 @@ export default async function DashboardPage() {
           )}
         </div>
       )}
+
+      {/* From the Track — News & Updates */}
+      <div className="bg-white rounded-card p-5 border border-surface-muted shadow-card">
+        <h3 className="text-sm font-bold text-gold mb-4 uppercase tracking-wide">
+          From the Track
+        </h3>
+        <div className="space-y-4">
+          <div className="border-l-2 border-gold/40 pl-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs text-slate-400">17 Mar 2026</span>
+              <span className="text-xs bg-gold-accent text-gold px-1.5 py-0.5 rounded font-medium">
+                Racing NSW
+              </span>
+            </div>
+            <h4 className="text-sm font-semibold text-slate-900">
+              Golden Slipper 2026: Final Field Confirmed
+            </h4>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              The 20-runner field for Saturday&apos;s $5 million Golden Slipper at Rosehill
+              has been locked in. Fireball heads the market as the early favourite
+              after a dominant trial, with Closer To Free and Paradoxium also well-fancied.
+            </p>
+          </div>
+
+          <div className="border-l-2 border-gold/40 pl-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs text-slate-400">16 Mar 2026</span>
+              <span className="text-xs bg-gold-accent text-gold px-1.5 py-0.5 rounded font-medium">
+                Form Guide
+              </span>
+            </div>
+            <h4 className="text-sm font-semibold text-slate-900">
+              Barrier Draw Analysis: Who Benefits?
+            </h4>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              Barriers can make or break a Slipper campaign. We look at the historical
+              data from Rosehill&apos;s 1200m and assess which runners have drawn
+              to advantage heading into Saturday&apos;s feature.
+            </p>
+          </div>
+
+          <div className="border-l-2 border-gold/40 pl-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs text-slate-400">15 Mar 2026</span>
+              <span className="text-xs bg-gold-accent text-gold px-1.5 py-0.5 rounded font-medium">
+                Group 1 Club
+              </span>
+            </div>
+            <h4 className="text-sm font-semibold text-slate-900">
+              Tips Open: Round 1 is Live
+            </h4>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              The 2026 Autumn Racing Carnival is underway! Get your tips in before
+              cutoff for all Round 1 races. Remember: $100 notional budget per race,
+              split across up to 4 selections.
+            </p>
+          </div>
+
+          <div className="border-l-2 border-gold/40 pl-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs text-slate-400">14 Mar 2026</span>
+              <span className="text-xs bg-gold-accent text-gold px-1.5 py-0.5 rounded font-medium">
+                Racing NSW
+              </span>
+            </div>
+            <h4 className="text-sm font-semibold text-slate-900">
+              Rosehill Track Rated Good 4 Ahead of Slipper Day
+            </h4>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              Track managers are expecting a Good 4 surface for Saturday&apos;s
+              blockbuster program. Fine weather is forecast through the week with
+              no significant rain expected before race day.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

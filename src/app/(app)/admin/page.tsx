@@ -34,8 +34,8 @@ export default async function AdminPage() {
             races: {
               include: {
                 runners: {
-                  select: { id: true, name: true, barrier: true, isScratched: true },
-                  orderBy: { barrier: "asc" },
+                  select: { id: true, name: true, barrier: true, runnerNumber: true, isScratched: true },
+                  orderBy: { runnerNumber: "asc" },
                 },
               },
             },

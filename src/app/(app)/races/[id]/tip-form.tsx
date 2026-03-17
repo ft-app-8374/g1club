@@ -7,6 +7,7 @@ interface Runner {
   id: string;
   name: string;
   barrier: number | null;
+  runnerNumber: number;
 }
 
 interface TipLine {
@@ -229,7 +230,7 @@ export function TipForm({
                     )
                     .map((r) => (
                       <option key={r.id} value={r.id}>
-                        {r.barrier ? `${r.barrier}. ` : ""}
+                        {r.runnerNumber ? `${r.runnerNumber}. ` : ""}
                         {r.name}
                       </option>
                     ))}
@@ -295,7 +296,7 @@ export function TipForm({
                     .filter((r) => r.id !== line.runnerId)
                     .map((r) => (
                       <option key={r.id} value={r.id}>
-                        {r.barrier ? `${r.barrier}. ` : ""}
+                        {r.runnerNumber ? `${r.runnerNumber}. ` : ""}
                         {r.name}
                       </option>
                     ))}

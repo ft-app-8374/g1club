@@ -72,6 +72,7 @@ export interface BetfairRunner {
     TRAINER_NAME?: string;
     WEIGHT_VALUE?: string;
     STALL_DRAW?: string;
+    CLOTH_NUMBER?: string;
   };
   status?: string; // "ACTIVE" | "REMOVED" etc
   sp?: {

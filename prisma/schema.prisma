@@ -106,6 +106,7 @@ model Runner {
   raceId        String
   betfairRunnerId String?
   name          String
+  runnerNumber  Int       @default(0)
   barrier       Int?
   jockey        String?
   trainer       String?
