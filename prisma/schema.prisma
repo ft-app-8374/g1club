@@ -24,10 +24,11 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  tips          Tip[]
-  ledgerEntries Ledger[]
-  notifications Notification[]
-  pushSubs      PushSubscription[]
+  tips           Tip[]
+  ledgerEntries  Ledger[]
+  notifications  Notification[]
+  pushSubs       PushSubscription[]
+  seasonResults  SeasonResult[]
   inviteCodesCreated InviteCode[] @relation("CreatedBy")
   inviteCodeUsedBy   InviteCode?  @relation("UsedBy")
 }
@@ -209,6 +210,25 @@ model HonourRoll {
   createdAt         DateTime @default(now())
 
   carnival Carnival? @relation(fields: [carnivalId], references: [id])
+}
+
+// Historical season results — imported from legacy spreadsheets
+// Used for honour roll and lifetime P&L calculations
+model SeasonResult {
+  id           String  @id @default(cuid())
+  year         Int
+  displayName  String  // Name as shown in the spreadsheet
+  canonicalName String // Normalised name for matching (e.g. "Law" → "Dean")
+  userId       String? // Link to User account if matched
+  rank         Int     // Final position that year
+  totalPnl     Float   // Overall P&L for the season
+  rounds       Int     // Number of rounds
+  roundPnls    String  @default("[]") // JSON array of per-round P&L values
+  createdAt    DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@unique([year, displayName])
 }
 
 model Notification {
