@@ -96,16 +96,19 @@ export function ResultEntry({ races }: { races: Race[] }) {
     (r) => (r.status === "closed" || r.status === "open") && r.runners.length > 0
   );
 
+  const inputClasses =
+    "bg-white border border-surface-muted rounded px-2 py-1.5 text-sm text-slate-900 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30";
+
   return (
     <div className="space-y-4">
       {settlableRaces.length === 0 ? (
-        <p className="text-sm text-slate-500">No races ready for result entry.</p>
+        <p className="text-sm text-slate-400">No races ready for result entry.</p>
       ) : (
         <>
           <select
             value={selectedRace}
             onChange={(e) => handleSelectRace(e.target.value)}
-            className="w-full bg-navy-light border border-navy-border rounded-lg px-3 py-2 text-sm text-white"
+            className="w-full bg-white border border-surface-muted rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-gold"
           >
             <option value="">Select a race...</option>
             {settlableRaces.map((r) => (
@@ -118,12 +121,12 @@ export function ResultEntry({ races }: { races: Race[] }) {
           {race && (
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <h4 className="text-sm font-semibold">
+                <h4 className="text-sm font-semibold text-slate-900">
                   {race.name} — {activeRunners.length} active runners
                 </h4>
                 <button
                   onClick={addResult}
-                  className="text-xs text-gold hover:text-gold-light"
+                  className="text-xs text-gold hover:text-gold-dark font-medium"
                 >
                   + Add Placing
                 </button>
@@ -135,14 +138,14 @@ export function ResultEntry({ races }: { races: Race[] }) {
                     type="number"
                     value={result.finishPosition}
                     onChange={(e) => updateResult(i, "finishPosition", e.target.value)}
-                    className="w-12 bg-navy-light border border-navy-border rounded px-2 py-1.5 text-sm text-white text-center"
+                    className={`w-12 ${inputClasses} text-center`}
                     min={1}
                     placeholder="#"
                   />
                   <select
                     value={result.runnerId}
                     onChange={(e) => updateResult(i, "runnerId", e.target.value)}
-                    className="flex-1 bg-navy-light border border-navy-border rounded px-2 py-1.5 text-sm text-white"
+                    className={`flex-1 ${inputClasses}`}
                   >
                     <option value="">Select horse...</option>
                     {activeRunners.map((r) => (
@@ -155,17 +158,17 @@ export function ResultEntry({ races }: { races: Race[] }) {
                     placeholder="Win $"
                     value={result.winDividend}
                     onChange={(e) => updateResult(i, "winDividend", e.target.value)}
-                    className="w-20 bg-navy-light border border-navy-border rounded px-2 py-1.5 text-sm text-white placeholder-slate-500"
+                    className={`w-20 ${inputClasses} placeholder-slate-400`}
                   />
                   <input
                     placeholder="Place $"
                     value={result.placeDividend}
                     onChange={(e) => updateResult(i, "placeDividend", e.target.value)}
-                    className="w-20 bg-navy-light border border-navy-border rounded px-2 py-1.5 text-sm text-white placeholder-slate-500"
+                    className={`w-20 ${inputClasses} placeholder-slate-400`}
                   />
                   <button
                     onClick={() => removeResult(i)}
-                    className="text-loss hover:text-red-400 text-sm"
+                    className="text-loss hover:text-red-700 text-sm"
                   >
                     ✕
                   </button>
@@ -184,7 +187,7 @@ export function ResultEntry({ races }: { races: Race[] }) {
                         { runnerId: "", finishPosition: 4, winDividend: "", placeDividend: "" },
                       ]);
                     }}
-                    className="text-sm text-gold hover:text-gold-light"
+                    className="text-sm text-gold hover:text-gold-dark font-medium"
                   >
                     Set up 1st–4th placings
                   </button>
@@ -195,7 +198,7 @@ export function ResultEntry({ races }: { races: Race[] }) {
                 <button
                   onClick={handleSettle}
                   disabled={loading || !results.every((r) => r.runnerId)}
-                  className="w-full bg-gold hover:bg-gold-dark text-navy font-bold text-sm px-4 py-3 rounded-lg transition disabled:opacity-50"
+                  className="w-full bg-gold hover:bg-gold-dark text-white font-bold text-sm px-4 py-3 rounded-lg transition disabled:opacity-50"
                 >
                   {loading ? "Settling..." : "Enter Results & Settle"}
                 </button>

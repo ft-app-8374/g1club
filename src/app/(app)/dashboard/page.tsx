@@ -72,8 +72,8 @@ export default async function DashboardPage() {
 
       {/* No active round message */}
       {!nextCutoff && carnival && (
-        <div className="bg-navy-card rounded-xl p-6 border border-navy-border text-center">
-          <p className="text-slate-400">
+        <div className="bg-white rounded-card p-6 border border-surface-muted shadow-card text-center">
+          <p className="text-slate-500">
             {carnival.status === "completed"
               ? "Season complete! Final standings below."
               : `${carnival.name} starts soon. Stay tuned!`}
@@ -82,22 +82,22 @@ export default async function DashboardPage() {
       )}
 
       {!carnival && (
-        <div className="bg-navy-card rounded-xl p-6 border border-navy-border text-center">
-          <p className="text-slate-400">No active carnival. Check back soon!</p>
+        <div className="bg-white rounded-card p-6 border border-surface-muted shadow-card text-center">
+          <p className="text-slate-500">No active carnival. Check back soon!</p>
         </div>
       )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-navy-card rounded-xl p-4 border border-navy-border text-center">
+        <div className="bg-white rounded-card p-4 border border-surface-muted shadow-card text-center">
           <p className="text-2xl font-bold text-gold">
             {myRank ? `#${myRank}` : "--"}
           </p>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Rank{sorted.length > 0 ? ` / ${sorted.length}` : ""}
           </p>
         </div>
-        <div className="bg-navy-card rounded-xl p-4 border border-navy-border text-center">
+        <div className="bg-white rounded-card p-4 border border-surface-muted shadow-card text-center">
           <p
             className={`text-2xl font-bold ${
               totalPnL >= 0 ? "text-profit" : "text-loss"
@@ -105,17 +105,17 @@ export default async function DashboardPage() {
           >
             {totalPnL >= 0 ? "+" : ""}${totalPnL.toFixed(0)}
           </p>
-          <p className="text-xs text-slate-400 mt-1">Total P&L</p>
+          <p className="text-xs text-slate-500 mt-1">Total P&L</p>
         </div>
-        <div className="bg-navy-card rounded-xl p-4 border border-navy-border text-center">
-          <p className="text-2xl font-bold text-white">{racesCompleted}</p>
-          <p className="text-xs text-slate-400 mt-1">Races</p>
+        <div className="bg-white rounded-card p-4 border border-surface-muted shadow-card text-center">
+          <p className="text-2xl font-bold text-slate-900">{racesCompleted}</p>
+          <p className="text-xs text-slate-500 mt-1">Races</p>
         </div>
       </div>
 
       {/* Untipped races list */}
       {untippedRaces.length > 0 && (
-        <div className="bg-navy-card rounded-xl p-5 border border-navy-border">
+        <div className="bg-white rounded-card p-5 border border-surface-muted shadow-card">
           <h3 className="text-sm font-bold text-gold mb-3 uppercase tracking-wide">
             Tips Needed ({untippedRaces.length})
           </h3>
@@ -124,10 +124,10 @@ export default async function DashboardPage() {
               <a
                 key={race.id}
                 href={`/races/${race.id}`}
-                className="flex justify-between items-center text-sm py-1.5 px-2 -mx-2 rounded hover:bg-navy-light transition"
+                className="flex justify-between items-center text-sm py-1.5 px-2 -mx-2 rounded hover:bg-surface-hover transition"
               >
                 <div>
-                  <span className="font-medium">{race.name}</span>
+                  <span className="font-medium text-slate-800">{race.name}</span>
                   <span className="text-xs text-slate-500 ml-2">{race.venue}</span>
                 </div>
                 <span className="text-gold text-xs font-semibold">Tip &rarr;</span>
@@ -139,14 +139,14 @@ export default async function DashboardPage() {
 
       {/* Recent Results */}
       {recentResults.length > 0 && (
-        <div className="bg-navy-card rounded-xl p-5 border border-navy-border">
+        <div className="bg-white rounded-card p-5 border border-surface-muted shadow-card">
           <h3 className="text-sm font-bold text-gold mb-3 uppercase tracking-wide">
             Recent Results
           </h3>
           <div className="space-y-2">
             {recentResults.map((entry) => (
               <div key={entry.id} className="flex justify-between text-sm">
-                <span className="text-slate-300">{entry.race.name}</span>
+                <span className="text-slate-700">{entry.race.name}</span>
                 <span
                   className={`font-semibold ${
                     entry.profit >= 0 ? "text-profit" : "text-loss"
@@ -162,11 +162,11 @@ export default async function DashboardPage() {
 
       {/* Welcome message (show only when no activity) */}
       {recentResults.length === 0 && untippedRaces.length === 0 && !nextCutoff && (
-        <div className="bg-navy-card rounded-xl p-6 border border-navy-border">
-          <h3 className="text-lg font-bold mb-2">
+        <div className="bg-white rounded-card p-6 border border-surface-muted shadow-card">
+          <h3 className="text-lg font-bold text-slate-900 mb-2">
             Welcome, {user.username}!
           </h3>
-          <p className="text-slate-400 text-sm leading-relaxed">
+          <p className="text-slate-500 text-sm leading-relaxed">
             When the carnival is active, you&apos;ll see open races to tip on,
             your results, and leaderboard position here.
           </p>

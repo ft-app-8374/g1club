@@ -25,14 +25,14 @@ export function InviteCodeGenerator() {
       <button
         onClick={generate}
         disabled={loading}
-        className="bg-gold hover:bg-gold-dark text-navy font-bold text-sm px-4 py-2 rounded-lg transition disabled:opacity-50"
+        className="bg-gold hover:bg-gold-dark text-white font-bold text-sm px-4 py-2 rounded-lg transition disabled:opacity-50"
       >
         {loading ? "Generating..." : "Generate Invite Code"}
       </button>
       {code && (
-        <p className="mt-2 text-sm">
+        <p className="mt-2 text-sm text-slate-700">
           New code:{" "}
-          <code className="text-gold bg-navy-light px-2 py-1 rounded">
+          <code className="text-gold bg-gold-accent px-2 py-1 rounded font-medium">
             {code}
           </code>
         </p>

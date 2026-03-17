@@ -9,22 +9,38 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        navy: {
-          DEFAULT: "#0a0f1e",
-          card: "#141b2d",
-          light: "#1e2a45",
-          border: "#2a3550",
+        surface: {
+          DEFAULT: "#f8f9fc",
+          card: "#ffffff",
+          hover: "#f1f3f7",
+          muted: "#e8ebf0",
         },
         gold: {
-          DEFAULT: "#d4a843",
-          light: "#e8c56d",
-          dark: "#b8922e",
+          DEFAULT: "#c8a44e",
+          light: "#d4b66a",
+          dark: "#b08f3a",
+          accent: "#faf5e6",
         },
-        profit: "#10b981",
-        loss: "#ef4444",
+        profit: "#16a34a",
+        loss: "#dc2626",
+        interactive: "#2563eb",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "system-ui",
+          "sans-serif",
+        ],
+      },
+      borderRadius: {
+        card: "16px",
+      },
+      boxShadow: {
+        card: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+        "card-hover":
+          "0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)",
       },
     },
   },

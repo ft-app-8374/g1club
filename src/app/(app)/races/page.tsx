@@ -24,8 +24,8 @@ export default async function RacesPage() {
   if (!carnival) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-xl font-bold mb-2">No Active Carnival</h2>
-        <p className="text-slate-400">Check back when the season starts.</p>
+        <h2 className="text-xl font-bold text-slate-900 mb-2">No Active Carnival</h2>
+        <p className="text-slate-500">Check back when the season starts.</p>
       </div>
     );
   }
@@ -52,7 +52,7 @@ export default async function RacesPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold">{carnival.name}</h2>
+      <h2 className="text-xl font-bold text-slate-900">{carnival.name}</h2>
 
       {carnival.rounds.map((round) => {
         const isPast = new Date(round.cutoffAt) < now;
@@ -70,7 +70,7 @@ export default async function RacesPage() {
                 &middot; Round {round.number}
               </h3>
               {!isPast && roundRaces.some((r) => r.status === "open") && (
-                <span className="text-xs text-gold bg-gold/10 px-2 py-0.5 rounded">
+                <span className="text-xs text-gold bg-gold-accent px-2 py-0.5 rounded font-medium">
                   Tips Open
                 </span>
               )}
@@ -86,32 +86,32 @@ export default async function RacesPage() {
                   <a
                     key={race.id}
                     href={`/races/${race.id}`}
-                    className="block bg-navy-card rounded-xl p-4 border border-navy-border hover:border-gold/30 transition"
+                    className="block bg-white rounded-card p-4 border border-surface-muted shadow-card hover:shadow-card-hover transition"
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <h4 className="font-semibold truncate">{race.name}</h4>
+                          <h4 className="font-semibold text-slate-900 truncate">{race.name}</h4>
                           {race.status === "open" && hasTipped && (
                             <span className="text-xs text-profit flex-shrink-0">&#10003;</span>
                           )}
                         </div>
-                        <p className="text-sm text-slate-400 mt-0.5">
+                        <p className="text-sm text-slate-500 mt-0.5">
                           {race.venue} &middot; {race.distance}m
                           {race.raceNumber > 0 && ` &middot; R${race.raceNumber}`}
                           {race.prizePool && ` &middot; ${race.prizePool}`}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                        <span className="text-xs bg-navy-light text-slate-300 px-2 py-0.5 rounded">
+                        <span className="text-xs bg-surface text-slate-600 px-2 py-0.5 rounded">
                           {race.grade}
                         </span>
                         {profit !== undefined ? (
                           <span
                             className={`text-xs font-bold px-2 py-0.5 rounded ${
                               profit >= 0
-                                ? "bg-profit/20 text-profit"
-                                : "bg-loss/20 text-loss"
+                                ? "bg-green-50 text-profit"
+                                : "bg-red-50 text-loss"
                             }`}
                           >
                             {profit >= 0 ? "+" : ""}${profit.toFixed(0)}
@@ -122,7 +122,7 @@ export default async function RacesPage() {
                       </div>
                     </div>
                     {activeRunners > 0 && (
-                      <p className="text-xs text-slate-500 mt-2">
+                      <p className="text-xs text-slate-400 mt-2">
                         {activeRunners} runners
                         {race.runners.length !== activeRunners && (
                           <span className="text-loss ml-1">
@@ -144,11 +144,11 @@ export default async function RacesPage() {
 
 function StatusBadge({ status, hasTipped }: { status: string; hasTipped: boolean }) {
   const styles: Record<string, string> = {
-    upcoming: "bg-slate-700 text-slate-300",
-    open: hasTipped ? "bg-profit/20 text-profit" : "bg-gold/20 text-gold",
-    closed: "bg-slate-600 text-slate-300",
-    final: "bg-profit/20 text-profit",
-    abandoned: "bg-slate-700 text-slate-400",
+    upcoming: "bg-slate-100 text-slate-500",
+    open: hasTipped ? "bg-green-50 text-profit" : "bg-gold-accent text-gold",
+    closed: "bg-slate-100 text-slate-500",
+    final: "bg-green-50 text-profit",
+    abandoned: "bg-slate-100 text-slate-400",
   };
 
   const labels: Record<string, string> = {
@@ -161,7 +161,7 @@ function StatusBadge({ status, hasTipped }: { status: string; hasTipped: boolean
 
   return (
     <span
-      className={`text-xs px-2 py-0.5 rounded ${styles[status] || styles.upcoming}`}
+      className={`text-xs px-2 py-0.5 rounded font-medium ${styles[status] || styles.upcoming}`}
     >
       {labels[status] || status}
     </span>

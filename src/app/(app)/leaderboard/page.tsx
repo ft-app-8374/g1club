@@ -39,17 +39,17 @@ export default async function LeaderboardPage() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold">Leaderboard</h2>
+      <h2 className="text-xl font-bold text-slate-900">Leaderboard</h2>
 
       {leaderboard.length === 0 ? (
-        <div className="bg-navy-card rounded-xl p-8 border border-navy-border text-center">
-          <p className="text-slate-400">
+        <div className="bg-white rounded-card p-8 border border-surface-muted shadow-card text-center">
+          <p className="text-slate-500">
             No results yet. The leaderboard will populate once races are
             settled.
           </p>
         </div>
       ) : (
-        <div className="bg-navy-card rounded-xl border border-navy-border overflow-hidden">
+        <div className="bg-white rounded-card border border-surface-muted shadow-card overflow-hidden">
           {leaderboard.map((entry, i) => {
             const isMe = entry.userId === session?.user.id;
             const isLast = i === leaderboard.length - 1;
@@ -57,8 +57,8 @@ export default async function LeaderboardPage() {
               <div
                 key={entry.userId}
                 className={`flex items-center justify-between px-4 py-3 ${
-                  !isLast ? "border-b border-navy-border" : ""
-                } ${isMe ? "bg-gold/5" : ""}`}
+                  !isLast ? "border-b border-surface-muted" : ""
+                } ${isMe ? "bg-gold-accent" : ""}`}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-lg w-8 text-center">
@@ -66,11 +66,11 @@ export default async function LeaderboardPage() {
                   </span>
                   <div>
                     <span
-                      className={`font-semibold ${isMe ? "text-gold" : ""}`}
+                      className={`font-semibold ${isMe ? "text-gold" : "text-slate-900"}`}
                     >
                       {entry.username}
                     </span>
-                    <span className="text-xs text-slate-500 ml-2">
+                    <span className="text-xs text-slate-400 ml-2">
                       {entry.races} races
                     </span>
                   </div>

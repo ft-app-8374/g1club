@@ -98,23 +98,23 @@ export default async function AdminPage() {
         {members.map((m) => (
           <div
             key={m.id}
-            className="flex items-center justify-between text-sm bg-navy/50 rounded-lg px-3 py-2"
+            className="flex items-center justify-between text-sm bg-surface rounded-lg px-3 py-2"
           >
             <div>
-              <span className="font-medium">{m.username}</span>
-              <span className="text-slate-500 ml-2 text-xs">{m.email}</span>
+              <span className="font-medium text-slate-900">{m.username}</span>
+              <span className="text-slate-400 ml-2 text-xs">{m.email}</span>
             </div>
             <div className="flex items-center gap-2">
               {m.role === "admin" && (
-                <span className="text-xs bg-gold/20 text-gold px-2 py-0.5 rounded">
+                <span className="text-xs bg-gold-accent text-gold px-2 py-0.5 rounded font-medium">
                   Admin
                 </span>
               )}
               <span
-                className={`text-xs px-2 py-0.5 rounded ${
+                className={`text-xs px-2 py-0.5 rounded font-medium ${
                   m.isFinancial
-                    ? "bg-profit/20 text-profit"
-                    : "bg-loss/20 text-loss"
+                    ? "bg-green-50 text-profit"
+                    : "bg-red-50 text-loss"
                 }`}
               >
                 {m.isFinancial ? "Paid" : "Unpaid"}
@@ -125,8 +125,8 @@ export default async function AdminPage() {
       </div>
 
       {/* Invite Codes */}
-      <div className="pt-4 border-t border-navy-border">
-        <h4 className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">
+      <div className="pt-4 border-t border-surface-muted">
+        <h4 className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">
           Invite Codes
         </h4>
         <InviteCodeGenerator />
@@ -134,8 +134,8 @@ export default async function AdminPage() {
           <div className="mt-3 space-y-1">
             {inviteCodes.map((ic) => (
               <div key={ic.id} className="flex justify-between text-sm">
-                <code className="text-gold">{ic.code}</code>
-                <span className="text-slate-500 text-xs">
+                <code className="text-gold font-medium">{ic.code}</code>
+                <span className="text-slate-400 text-xs">
                   expires{" "}
                   {new Date(ic.expiresAt).toLocaleDateString("en-AU")}
                 </span>
@@ -157,9 +157,9 @@ export default async function AdminPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Admin Panel</h2>
+        <h2 className="text-xl font-bold text-slate-900">Admin Panel</h2>
         {carnival && (
-          <div className="text-right text-xs text-slate-400">
+          <div className="text-right text-xs text-slate-500">
             <p>{carnival.name}</p>
             <p>{carnival.rounds.length} rounds &middot; {totalRaces} races &middot; {totalRunners} runners</p>
           </div>

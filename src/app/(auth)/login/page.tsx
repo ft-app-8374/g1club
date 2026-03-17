@@ -33,50 +33,50 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-surface">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gold mb-2">
-            Group 1 Club
+          <h1 className="text-4xl font-bold text-slate-900 mb-2">
+            Group 1 <span className="text-gold">Club</span>
           </h1>
-          <p className="text-slate-400 italic">
+          <p className="text-slate-500 italic">
             &ldquo;Tipping winners since&hellip; never&rdquo;
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="bg-navy-card rounded-xl p-6 border border-navy-border"
+          className="bg-white rounded-card p-6 border border-surface-muted shadow-card"
         >
           {error && (
-            <div className="bg-loss/10 border border-loss/30 text-loss rounded-lg px-4 py-2 mb-4 text-sm">
+            <div className="bg-red-50 border border-red-200 text-loss rounded-lg px-4 py-2 mb-4 text-sm">
               {error}
             </div>
           )}
 
           <div className="mb-4">
-            <label className="block text-sm text-slate-400 mb-1">
+            <label className="block text-sm text-slate-600 mb-1 font-medium">
               Username
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-navy-light border border-navy-border rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-gold transition"
+              className="w-full bg-white border border-surface-muted rounded-lg px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition"
               placeholder="e.g. Law"
               required
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm text-slate-400 mb-1">
+            <label className="block text-sm text-slate-600 mb-1 font-medium">
               Password
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-navy-light border border-navy-border rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-gold transition"
+              className="w-full bg-white border border-surface-muted rounded-lg px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition"
               placeholder="Enter your password"
               required
             />
@@ -85,14 +85,14 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gold hover:bg-gold-dark text-navy font-bold py-3 rounded-lg transition disabled:opacity-50"
+            className="w-full bg-gold hover:bg-gold-dark text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
           >
             {loading ? "Logging in..." : "Log In"}
           </button>
 
-          <p className="text-center text-sm text-slate-400 mt-4">
+          <p className="text-center text-sm text-slate-500 mt-4">
             Have an invite code?{" "}
-            <Link href="/register" className="text-gold hover:text-gold-light">
+            <Link href="/register" className="text-gold hover:text-gold-dark font-medium">
               Register
             </Link>
           </p>

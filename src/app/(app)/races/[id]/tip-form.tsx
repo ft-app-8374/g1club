@@ -134,27 +134,32 @@ export function TipForm({
 
   if (isExpired) {
     return (
-      <div className="bg-loss/10 border border-loss/30 rounded-xl p-5 text-center">
+      <div className="bg-red-50 border border-red-200 rounded-card p-5 text-center">
         <p className="text-loss font-bold">Tips are now closed</p>
-        <p className="text-sm text-slate-400 mt-1">The cutoff has passed. Refresh the page to see all tips.</p>
+        <p className="text-sm text-slate-500 mt-1">The cutoff has passed. Refresh the page to see all tips.</p>
       </div>
     );
   }
 
+  const selectClasses =
+    "w-full bg-white border border-surface-muted rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30";
+  const inputClasses =
+    "w-full bg-white border border-surface-muted rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30";
+
   return (
-    <div className="bg-navy-card rounded-xl p-5 border border-navy-border">
+    <div className="bg-white rounded-card p-5 border border-surface-muted shadow-card">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-sm font-bold text-gold uppercase tracking-wide">
           {existingTip ? "Edit Your Tips" : "Submit Tips"}
         </h3>
         <div className="text-right">
           {minutesLeft !== null && minutesLeft <= 60 && (
-            <p className={`text-xs font-semibold ${minutesLeft <= 15 ? "text-loss" : "text-orange-400"}`}>
+            <p className={`text-xs font-semibold ${minutesLeft <= 15 ? "text-loss" : "text-orange-500"}`}>
               {minutesLeft}min left
             </p>
           )}
-          <p className="text-sm">
-            Budget: <span className="font-bold text-white">$100</span>
+          <p className="text-sm text-slate-700">
+            Budget: <span className="font-bold text-slate-900">$100</span>
           </p>
           <p
             className={`text-xs ${
@@ -162,7 +167,7 @@ export function TipForm({
                 ? "text-profit"
                 : remaining < 0
                   ? "text-loss"
-                  : "text-slate-400"
+                  : "text-slate-500"
             }`}
           >
             Remaining: ${remaining.toFixed(0)}
@@ -171,13 +176,13 @@ export function TipForm({
       </div>
 
       {error && (
-        <div className="bg-loss/10 border border-loss/30 text-loss rounded-lg px-4 py-2 mb-4 text-sm">
+        <div className="bg-red-50 border border-red-200 text-loss rounded-lg px-4 py-2 mb-4 text-sm">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="bg-profit/10 border border-profit/30 text-profit rounded-lg px-4 py-2 mb-4 text-sm">
+        <div className="bg-green-50 border border-green-200 text-profit rounded-lg px-4 py-2 mb-4 text-sm">
           Tips submitted successfully!
         </div>
       )}
@@ -188,17 +193,17 @@ export function TipForm({
           return (
             <div
               key={i}
-              className="bg-navy-light rounded-lg p-4 border border-navy-border"
+              className="bg-surface rounded-lg p-4 border border-surface-muted"
             >
               <div className="flex justify-between items-center mb-3">
-                <span className="text-xs text-slate-400 font-medium">
+                <span className="text-xs text-slate-500 font-medium">
                   BET {i + 1}
                 </span>
                 {lines.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeLine(i)}
-                    className="text-xs text-loss hover:text-loss/80"
+                    className="text-xs text-loss hover:text-red-700"
                   >
                     Remove
                   </button>
@@ -207,7 +212,7 @@ export function TipForm({
 
               {/* Horse selection */}
               <div className="mb-3">
-                <label className="block text-xs text-slate-400 mb-1">
+                <label className="block text-xs text-slate-500 mb-1">
                   Horse
                 </label>
                 <select
@@ -215,7 +220,7 @@ export function TipForm({
                   onChange={(e) =>
                     updateLine(i, { runnerId: e.target.value })
                   }
-                  className="w-full bg-navy border border-navy-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-gold"
+                  className={selectClasses}
                 >
                   <option value="">Select horse...</option>
                   {runners
@@ -234,7 +239,7 @@ export function TipForm({
               {/* Bet type + Amount */}
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">
+                  <label className="block text-xs text-slate-500 mb-1">
                     Type
                   </label>
                   <select
@@ -244,14 +249,14 @@ export function TipForm({
                         betType: e.target.value as "win" | "place",
                       })
                     }
-                    className="w-full bg-navy border border-navy-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-gold"
+                    className={selectClasses}
                   >
                     <option value="win">Win</option>
                     <option value="place">Place</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">
+                  <label className="block text-xs text-slate-500 mb-1">
                     Amount ($)
                   </label>
                   <input
@@ -265,7 +270,7 @@ export function TipForm({
                         amount: parseFloat(e.target.value) || 0,
                       })
                     }
-                    className="w-full bg-navy border border-navy-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-gold"
+                    className={inputClasses}
                     placeholder="0"
                   />
                 </div>
@@ -273,7 +278,7 @@ export function TipForm({
 
               {/* Backup horse */}
               <div>
-                <label className="block text-xs text-slate-400 mb-1">
+                <label className="block text-xs text-slate-500 mb-1">
                   Backup (if scratched)
                 </label>
                 <select
@@ -283,7 +288,7 @@ export function TipForm({
                       backupRunnerId: e.target.value || undefined,
                     })
                   }
-                  className="w-full bg-navy border border-navy-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-gold"
+                  className={selectClasses}
                 >
                   <option value="">No backup</option>
                   {runners
@@ -305,21 +310,21 @@ export function TipForm({
           <button
             type="button"
             onClick={addLine}
-            className="w-full py-2 border border-dashed border-navy-border rounded-lg text-sm text-slate-400 hover:text-gold hover:border-gold/30 transition"
+            className="w-full py-2 border border-dashed border-surface-muted rounded-lg text-sm text-slate-500 hover:text-gold hover:border-gold/30 transition"
           >
             + Add Another Bet ({lines.length}/4)
           </button>
         )}
 
         {/* Summary */}
-        <div className="bg-navy rounded-lg p-4 border border-navy-border">
-          <h4 className="text-xs text-slate-400 mb-2 uppercase">Summary</h4>
+        <div className="bg-surface rounded-lg p-4 border border-surface-muted">
+          <h4 className="text-xs text-slate-500 mb-2 uppercase">Summary</h4>
           {lines
             .filter((l) => l.runnerId && l.amount > 0)
             .map((l, i) => {
               const runner = runners.find((r) => r.id === l.runnerId);
               return (
-                <div key={i} className="flex justify-between text-sm">
+                <div key={i} className="flex justify-between text-sm text-slate-700">
                   <span>
                     ${l.amount} {l.betType.toUpperCase()}{" "}
                     {runner?.name || "..."}
@@ -327,8 +332,8 @@ export function TipForm({
                 </div>
               );
             })}
-          <div className="mt-2 pt-2 border-t border-navy-border flex justify-between text-sm font-bold">
-            <span>Total</span>
+          <div className="mt-2 pt-2 border-t border-surface-muted flex justify-between text-sm font-bold">
+            <span className="text-slate-700">Total</span>
             <span
               className={
                 Math.abs(totalAmount - 100) < 0.01
@@ -347,7 +352,7 @@ export function TipForm({
           <button
             type="submit"
             disabled={!isValid || loading}
-            className="flex-1 bg-gold hover:bg-gold-dark text-navy font-bold py-3 rounded-lg transition disabled:opacity-50"
+            className="flex-1 bg-gold hover:bg-gold-dark text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
           >
             {loading
               ? "Submitting..."
@@ -360,7 +365,7 @@ export function TipForm({
               type="button"
               onClick={handleDelete}
               disabled={loading}
-              className="px-4 bg-loss/10 text-loss rounded-lg hover:bg-loss/20 transition disabled:opacity-50"
+              className="px-4 bg-red-50 text-loss rounded-lg hover:bg-red-100 transition disabled:opacity-50"
             >
               Delete
             </button>

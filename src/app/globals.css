@@ -3,17 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --navy: #0a0f1e;
-  --navy-card: #141b2d;
-  --navy-light: #1e2a45;
-  --gold: #d4a843;
-  --profit: #10b981;
-  --loss: #ef4444;
-  --text: #f1f5f9;
+  --bg: #f8f9fc;
+  --card: #ffffff;
+  --border: #e8ebf0;
+  --gold: #c8a44e;
+  --gold-accent: #faf5e6;
+  --profit: #16a34a;
+  --loss: #dc2626;
+  --text: #1e293b;
+  --text-muted: #64748b;
 }
 
 body {
-  background: var(--navy);
+  background: var(--bg);
   color: var(--text);
 }
 
@@ -21,9 +23,15 @@ body {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--navy);
+  background: var(--bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--navy-light);
+  background: var(--border);
   border-radius: 3px;
+}
+
+/* Drawer overlay */
+.drawer-overlay {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
 }

@@ -21,9 +21,9 @@ export function Countdown({ cutoffAt, untippedCount, roundName, venue }: Countdo
 
   if (timeLeft.total <= 0) {
     return (
-      <div className="bg-loss/20 border-2 border-loss/50 rounded-xl p-5 text-center">
+      <div className="bg-red-50 border-2 border-red-200 rounded-card p-5 text-center">
         <p className="text-loss font-bold text-lg">Tips Closed</p>
-        <p className="text-sm text-slate-400 mt-1">{roundName}</p>
+        <p className="text-sm text-slate-500 mt-1">{roundName}</p>
       </div>
     );
   }
@@ -34,27 +34,27 @@ export function Countdown({ cutoffAt, untippedCount, roundName, venue }: Countdo
   const borderColor = isCritical
     ? "border-loss animate-pulse"
     : isUrgent
-      ? "border-orange-500"
-      : "border-gold/50";
+      ? "border-orange-400"
+      : "border-gold/40";
 
   const bgColor = isCritical
-    ? "bg-loss/20"
+    ? "bg-red-50"
     : isUrgent
-      ? "bg-orange-500/10"
-      : "bg-gold/10";
+      ? "bg-orange-50"
+      : "bg-gold-accent";
 
   return (
-    <div className={`${bgColor} border-2 ${borderColor} rounded-xl p-5`}>
+    <div className={`${bgColor} border-2 ${borderColor} rounded-card p-5`}>
       {untippedCount > 0 && (
         <div className="text-center mb-3">
-          <p className={`text-sm font-bold ${isCritical ? "text-loss" : isUrgent ? "text-orange-400" : "text-gold"}`}>
+          <p className={`text-sm font-bold ${isCritical ? "text-loss" : isUrgent ? "text-orange-600" : "text-gold"}`}>
             {isCritical
               ? "TIPS CLOSING SOON!"
               : isUrgent
                 ? "Don't forget to tip!"
                 : "Tips open"}
           </p>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             {untippedCount} race{untippedCount !== 1 ? "s" : ""} need{untippedCount === 1 ? "s" : ""} your tips — {roundName}{venue ? ` (${venue})` : ""}
           </p>
         </div>
@@ -73,10 +73,10 @@ export function Countdown({ cutoffAt, untippedCount, roundName, venue }: Countdo
             href="/races"
             className={`inline-block font-bold text-sm px-5 py-2 rounded-lg transition ${
               isCritical
-                ? "bg-loss text-white hover:bg-red-600"
+                ? "bg-loss text-white hover:bg-red-700"
                 : isUrgent
                   ? "bg-orange-500 text-white hover:bg-orange-600"
-                  : "bg-gold text-navy hover:bg-gold-dark"
+                  : "bg-gold text-white hover:bg-gold-dark"
             }`}
           >
             Submit Tips Now
@@ -91,8 +91,8 @@ function TimeBlock({ value, label, show }: { value: number; label: string; show:
   if (!show) return null;
   return (
     <div className="text-center">
-      <div className="bg-navy-card border border-navy-border rounded-lg px-3 py-2 min-w-[3.5rem]">
-        <span className="text-2xl font-bold font-mono text-white">
+      <div className="bg-white border border-surface-muted rounded-lg px-3 py-2 min-w-[3.5rem] shadow-card">
+        <span className="text-2xl font-bold font-mono text-slate-900">
           {String(value).padStart(2, "0")}
         </span>
       </div>

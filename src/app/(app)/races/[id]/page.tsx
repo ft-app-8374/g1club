@@ -72,12 +72,12 @@ export default async function RaceDetailPage({
       <div>
         <a
           href="/races"
-          className="text-sm text-gold hover:text-gold-light mb-2 inline-block"
+          className="text-sm text-gold hover:text-gold-dark mb-2 inline-block font-medium"
         >
           &larr; Races
         </a>
-        <h2 className="text-2xl font-bold">{race.name}</h2>
-        <p className="text-slate-400">
+        <h2 className="text-2xl font-bold text-slate-900">{race.name}</h2>
+        <p className="text-slate-500">
           {race.venue} &middot; {race.distance}m &middot;{" "}
           {new Date(race.raceTime).toLocaleTimeString("en-AU", {
             hour: "numeric",
@@ -85,16 +85,16 @@ export default async function RaceDetailPage({
           })}
         </p>
         <div className="flex gap-2 mt-2">
-          <span className="text-xs bg-navy-light text-slate-300 px-2 py-0.5 rounded">
+          <span className="text-xs bg-surface text-slate-600 px-2 py-0.5 rounded">
             {race.grade}
           </span>
           {race.raceType && (
-            <span className="text-xs bg-navy-light text-slate-300 px-2 py-0.5 rounded">
+            <span className="text-xs bg-surface text-slate-600 px-2 py-0.5 rounded">
               {race.raceType}
             </span>
           )}
           {race.prizePool && (
-            <span className="text-xs bg-navy-light text-slate-300 px-2 py-0.5 rounded">
+            <span className="text-xs bg-surface text-slate-600 px-2 py-0.5 rounded">
               {race.prizePool}
             </span>
           )}
@@ -103,7 +103,7 @@ export default async function RaceDetailPage({
 
       {/* Cutoff countdown */}
       {!cutoffPassed && (
-        <div className="bg-gold/10 border border-gold/30 rounded-xl p-4">
+        <div className="bg-gold-accent border border-gold/30 rounded-card p-4">
           <p className="text-sm text-gold font-medium">
             Tips close ({race.venue}):{" "}
             {venueCutoff.toLocaleString("en-AU", {
@@ -115,14 +115,14 @@ export default async function RaceDetailPage({
               timeZone: "Australia/Sydney",
             })}
           </p>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             30 min before first race at {race.venue}
           </p>
         </div>
       )}
 
       {cutoffPassed && !isSettled && (
-        <div className="bg-loss/10 border border-loss/30 rounded-xl p-4">
+        <div className="bg-red-50 border border-red-200 rounded-card p-4">
           <p className="text-sm text-loss font-medium">
             Tips locked — waiting for result
           </p>
@@ -131,14 +131,14 @@ export default async function RaceDetailPage({
 
       {/* Results */}
       {isSettled && race.results.length > 0 && (
-        <div className="bg-navy-card rounded-xl p-5 border border-navy-border">
+        <div className="bg-white rounded-card p-5 border border-surface-muted shadow-card">
           <h3 className="text-sm font-bold text-gold mb-3 uppercase tracking-wide">
             Result
           </h3>
           <div className="space-y-2">
             {race.results.slice(0, 4).map((r) => (
               <div key={r.id} className="flex justify-between text-sm">
-                <span>
+                <span className="text-slate-800">
                   {r.finishPosition === 1
                     ? "🥇"
                     : r.finishPosition === 2
@@ -148,7 +148,7 @@ export default async function RaceDetailPage({
                         : `${r.finishPosition}th`}{" "}
                   {r.runner.name}
                 </span>
-                <span className="text-slate-400">
+                <span className="text-slate-500">
                   {r.winDividend ? `$${r.winDividend.toFixed(2)} W` : ""}
                   {r.placeDividend ? ` $${r.placeDividend.toFixed(2)} P` : ""}
                 </span>
@@ -156,8 +156,8 @@ export default async function RaceDetailPage({
             ))}
           </div>
           {myLedger && (
-            <div className="mt-3 pt-3 border-t border-navy-border">
-              <span className="text-sm">Your P&L: </span>
+            <div className="mt-3 pt-3 border-t border-surface-muted">
+              <span className="text-sm text-slate-700">Your P&L: </span>
               <span
                 className={`font-bold ${myLedger.profit >= 0 ? "text-profit" : "text-loss"}`}
               >
@@ -169,7 +169,7 @@ export default async function RaceDetailPage({
       )}
 
       {/* Field */}
-      <div className="bg-navy-card rounded-xl p-5 border border-navy-border">
+      <div className="bg-white rounded-card p-5 border border-surface-muted shadow-card">
         <h3 className="text-sm font-bold text-gold mb-3 uppercase tracking-wide">
           Field ({activeRunners.length} runners)
         </h3>
@@ -182,17 +182,17 @@ export default async function RaceDetailPage({
               }`}
             >
               <div className="flex items-center gap-2">
-                <span className="w-6 text-center text-slate-500 text-xs">
+                <span className="w-6 text-center text-slate-400 text-xs">
                   {r.barrier || "-"}
                 </span>
-                <span className={r.isScratched ? "text-slate-500" : ""}>
+                <span className={r.isScratched ? "text-slate-400" : "text-slate-800"}>
                   {r.name}
                 </span>
                 {r.isScratched && (
                   <span className="text-xs text-loss">SCR</span>
                 )}
               </div>
-              <div className="text-xs text-slate-500">
+              <div className="text-xs text-slate-400">
                 {r.jockey && <span>{r.jockey}</span>}
                 {r.weight && <span className="ml-2">{r.weight}kg</span>}
               </div>
@@ -200,7 +200,7 @@ export default async function RaceDetailPage({
           ))}
         </div>
         {race.runners.length === 0 && (
-          <p className="text-slate-500 text-sm">
+          <p className="text-slate-400 text-sm">
             Fields not yet released for this race.
           </p>
         )}
