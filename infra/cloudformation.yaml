@@ -1,0 +1,444 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Group 1 Club — Next.js tipping app (App Runner + RDS PostgreSQL + SES)
+
+Parameters:
+  Environment:
+    Type: String
+    Default: staging
+    AllowedValues: [staging, production]
+
+  AppDomain:
+    Type: String
+    Default: app.group1club.com
+    Description: Subdomain for the app (e.g. app.group1club.com or staging.group1club.com)
+
+  DBMasterPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 12
+    Description: Database master password (min 12 chars)
+
+  NextAuthSecret:
+    Type: String
+    NoEcho: true
+    MinLength: 16
+    Description: NextAuth JWT secret (generate with openssl rand -base64 32)
+
+  BetfairAppKey:
+    Type: String
+    Default: ''
+    Description: Betfair application key
+
+  BetfairUsername:
+    Type: String
+    Default: ''
+    Description: Betfair account username
+
+  BetfairPassword:
+    Type: String
+    NoEcho: true
+    Default: ''
+    Description: Betfair account password
+
+  CronSecret:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: Shared secret for cron endpoint auth
+
+  EmailFrom:
+    Type: String
+    Default: 'Group 1 Club <noreply@group1club.com>'
+
+Resources:
+
+  # ═══════════════════════════════════════
+  # VPC + Networking (minimal)
+  # ═══════════════════════════════════════
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub g1club-${Environment}
+
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub g1club-${Environment}-a
+
+  SubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub g1club-${Environment}-b
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetARouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubnetA
+      RouteTableId: !Ref RouteTable
+
+  SubnetBRouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubnetB
+      RouteTableId: !Ref RouteTable
+
+  # ═══════════════════════════════════════
+  # Security Groups
+  # ═══════════════════════════════════════
+
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow PostgreSQL from App Runner VPC connector
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref AppRunnerSecurityGroup
+
+  AppRunnerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: App Runner VPC connector
+      VpcId: !Ref VPC
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 10.0.0.0/16
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+
+  # ═══════════════════════════════════════
+  # RDS PostgreSQL (Free Tier eligible)
+  # ═══════════════════════════════════════
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: G1Club DB subnets
+      SubnetIds:
+        - !Ref SubnetA
+        - !Ref SubnetB
+
+  Database:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: !Sub g1club-${Environment}
+      Engine: postgres
+      EngineVersion: '16.4'
+      DBInstanceClass: db.t3.micro    # Free tier eligible
+      AllocatedStorage: 20             # Free tier: up to 20GB
+      StorageType: gp3
+      MasterUsername: g1club
+      MasterUserPassword: !Ref DBMasterPassword
+      DBName: g1club
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      PubliclyAccessible: false
+      BackupRetentionPeriod: 7
+      MultiAZ: false                   # Single AZ for cost savings
+      DeletionProtection: true
+      Tags:
+        - Key: Name
+          Value: !Sub g1club-${Environment}
+
+  # ═══════════════════════════════════════
+  # ECR Repository
+  # ═══════════════════════════════════════
+
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub g1club-${Environment}
+      ImageScanningConfiguration:
+        ScanOnPush: false
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [{
+              "rulePriority": 1,
+              "description": "Keep last 5 images",
+              "selection": {
+                "tagStatus": "any",
+                "countType": "imageCountMoreThan",
+                "countNumber": 5
+              },
+              "action": { "type": "expire" }
+            }]
+          }
+
+  # ═══════════════════════════════════════
+  # App Runner
+  # ═══════════════════════════════════════
+
+  AppRunnerAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub g1club-apprunner-access-${Environment}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: build.apprunner.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ECRAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetAuthorizationToken
+                  - ecr:DescribeImages
+                Resource: '*'
+
+  AppRunnerInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub g1club-apprunner-instance-${Environment}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: tasks.apprunner.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: SESAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                Resource: '*'
+
+  VpcConnector:
+    Type: AWS::AppRunner::VpcConnector
+    Properties:
+      VpcConnectorName: !Sub g1club-${Environment}
+      Subnets:
+        - !Ref SubnetA
+        - !Ref SubnetB
+      SecurityGroups:
+        - !Ref AppRunnerSecurityGroup
+
+  AppRunnerService:
+    Type: AWS::AppRunner::Service
+    DependsOn: Database
+    Properties:
+      ServiceName: !Sub g1club-${Environment}
+      SourceConfiguration:
+        AuthenticationConfiguration:
+          AccessRoleArn: !GetAtt AppRunnerAccessRole.Arn
+        ImageRepository:
+          ImageIdentifier: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepository}:latest
+          ImageRepositoryType: ECR
+          ImageConfiguration:
+            Port: '3000'
+            RuntimeEnvironmentVariables:
+              - Name: DATABASE_URL
+                Value: !Sub
+                  - postgresql://g1club:${DBMasterPassword}@${DBEndpoint}:5432/g1club
+                  - DBEndpoint: !GetAtt Database.Endpoint.Address
+              - Name: NEXTAUTH_SECRET
+                Value: !Ref NextAuthSecret
+              - Name: NEXTAUTH_URL
+                Value: !Sub https://${AppDomain}
+              - Name: BETFAIR_APP_KEY
+                Value: !Ref BetfairAppKey
+              - Name: BETFAIR_USERNAME
+                Value: !Ref BetfairUsername
+              - Name: BETFAIR_PASSWORD
+                Value: !Ref BetfairPassword
+              - Name: CRON_SECRET
+                Value: !Ref CronSecret
+              - Name: EMAIL_FROM
+                Value: !Ref EmailFrom
+              - Name: NODE_ENV
+                Value: production
+        AutoDeploymentsEnabled: false
+      InstanceConfiguration:
+        Cpu: '0.25 vCPU'
+        Memory: '0.5 GB'
+        InstanceRoleArn: !GetAtt AppRunnerInstanceRole.Arn
+      NetworkConfiguration:
+        EgressConfiguration:
+          EgressType: VPC
+          VpcConnectorArn: !GetAtt VpcConnector.VpcConnectorArn
+      HealthCheckConfiguration:
+        Protocol: HTTP
+        Path: /api/health
+        Interval: 20
+        Timeout: 5
+        HealthyThreshold: 1
+        UnhealthyThreshold: 5
+      AutoScalingConfigurationArn: !Ref AutoScalingConfig
+
+  AutoScalingConfig:
+    Type: AWS::AppRunner::AutoScalingConfiguration
+    Properties:
+      AutoScalingConfigurationName: !Sub g1club-${Environment}
+      MaxConcurrency: 50
+      MaxSize: 2          # Max 2 instances (cost control)
+      MinSize: 1          # 1 always running
+
+  # ═══════════════════════════════════════
+  # SES Email Identity
+  # ═══════════════════════════════════════
+
+  SESEmailIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: group1club.com
+
+  # ═══════════════════════════════════════
+  # EventBridge Cron Schedules
+  # ═══════════════════════════════════════
+
+  CronRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub g1club-cron-${Environment}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeHTTPEndpoint
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - apprunner:StartDeployment
+                  - apprunner:DescribeService
+                Resource: '*'
+
+  # Open races cron — runs daily at 8am AEST (10pm UTC previous day)
+  CronOpenRaces:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub g1club-open-races-${Environment}
+      ScheduleExpression: cron(0 22 * * ? *)
+      ScheduleExpressionTimezone: UTC
+      FlexibleTimeWindow:
+        Mode: 'OFF'
+      Target:
+        Arn: !Sub arn:aws:scheduler:::aws-sdk:apprunner:startDeployment
+        RoleArn: !GetAtt CronRole.Arn
+        Input: !Sub |
+          {
+            "Url": "https://${AppDomain}/api/cron/open-races",
+            "Method": "POST",
+            "Headers": {"Authorization": "Bearer ${CronSecret}"}
+          }
+
+  # Close tips — runs every 15 min during race hours (Sat 9am-6pm AEST = Fri 11pm - Sat 8am UTC)
+  CronCloseTips:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub g1club-close-tips-${Environment}
+      ScheduleExpression: rate(15 minutes)
+      FlexibleTimeWindow:
+        Mode: 'OFF'
+      Target:
+        Arn: !Sub arn:aws:scheduler:::aws-sdk:apprunner:startDeployment
+        RoleArn: !GetAtt CronRole.Arn
+        Input: !Sub |
+          {
+            "Url": "https://${AppDomain}/api/cron/close-races",
+            "Method": "POST",
+            "Headers": {"Authorization": "Bearer ${CronSecret}"}
+          }
+
+  # Send notifications — runs every 30 min
+  CronNotifications:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub g1club-notifications-${Environment}
+      ScheduleExpression: rate(30 minutes)
+      FlexibleTimeWindow:
+        Mode: 'OFF'
+      Target:
+        Arn: !Sub arn:aws:scheduler:::aws-sdk:apprunner:startDeployment
+        RoleArn: !GetAtt CronRole.Arn
+        Input: !Sub |
+          {
+            "Url": "https://${AppDomain}/api/cron/send-notifications",
+            "Method": "POST",
+            "Headers": {"Authorization": "Bearer ${CronSecret}"}
+          }
+
+Outputs:
+  AppRunnerURL:
+    Description: App Runner default URL (use this until custom domain is configured)
+    Value: !GetAtt AppRunnerService.ServiceUrl
+
+  ECRRepositoryURI:
+    Description: ECR repo URI — push your Docker image here
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepository}
+
+  DatabaseEndpoint:
+    Description: RDS endpoint (internal only)
+    Value: !GetAtt Database.Endpoint.Address
+
+  SESNote:
+    Description: SES setup reminder
+    Value: >-
+      SES domain identity created. You need to:
+      1) Add the DKIM CNAME records to your DNS (check SES console)
+      2) Request production access if still in sandbox mode
+      SMTP creds: Create in SES console > SMTP settings > Create credentials

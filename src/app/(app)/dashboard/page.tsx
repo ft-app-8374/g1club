@@ -1,0 +1,186 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { Countdown } from "@/components/countdown";
+import { getNextCutoff } from "@/lib/cutoff";
+
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+  const user = session!.user;
+
+  // Get active carnival
+  const carnival = await prisma.carnival.findFirst({
+    where: { status: { in: ["active", "upcoming"] } },
+    include: {
+      rounds: {
+        include: { races: true },
+        orderBy: { raceDate: "asc" },
+      },
+    },
+  });
+
+  // Get all users' P&L for ranking
+  const allLedger = await prisma.ledger.groupBy({
+    by: ["userId"],
+    _sum: { profit: true },
+    _count: true,
+  });
+
+  const sorted = allLedger
+    .map((l) => ({ userId: l.userId, profit: l._sum.profit || 0, races: l._count }))
+    .sort((a, b) => b.profit - a.profit);
+
+  const myEntry = sorted.find((s) => s.userId === user.id);
+  const myRank = myEntry ? sorted.indexOf(myEntry) + 1 : null;
+  const totalPnL = myEntry?.profit || 0;
+  const racesCompleted = myEntry?.races || 0;
+
+  // Get next venue cutoff (per-venue, 30 min before first race)
+  const nextCutoff = await getNextCutoff();
+
+  // Find open races the user hasn't tipped on yet
+  const openRaces = carnival?.rounds.flatMap((r) =>
+    r.races.filter((race) => race.status === "open")
+  ) || [];
+
+  const myTips = await prisma.tip.findMany({
+    where: { userId: user.id },
+    select: { raceId: true },
+  });
+  const tippedRaceIds = new Set(myTips.map((t) => t.raceId));
+  const untippedRaces = openRaces.filter((r) => !tippedRaceIds.has(r.id));
+
+  // Recent results (last 5 ledger entries)
+  const recentResults = await prisma.ledger.findMany({
+    where: { userId: user.id },
+    include: { race: { select: { name: true, venue: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Countdown Timer — most prominent element when tips are open */}
+      {nextCutoff && (
+        <Countdown
+          cutoffAt={nextCutoff.cutoff.toISOString()}
+          untippedCount={untippedRaces.length}
+          roundName={nextCutoff.roundName}
+          venue={nextCutoff.venue}
+        />
+      )}
+
+      {/* No active round message */}
+      {!nextCutoff && carnival && (
+        <div className="bg-navy-card rounded-xl p-6 border border-navy-border text-center">
+          <p className="text-slate-400">
+            {carnival.status === "completed"
+              ? "Season complete! Final standings below."
+              : `${carnival.name} starts soon. Stay tuned!`}
+          </p>
+        </div>
+      )}
+
+      {!carnival && (
+        <div className="bg-navy-card rounded-xl p-6 border border-navy-border text-center">
+          <p className="text-slate-400">No active carnival. Check back soon!</p>
+        </div>
+      )}
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-navy-card rounded-xl p-4 border border-navy-border text-center">
+          <p className="text-2xl font-bold text-gold">
+            {myRank ? `#${myRank}` : "--"}
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            Rank{sorted.length > 0 ? ` / ${sorted.length}` : ""}
+          </p>
+        </div>
+        <div className="bg-navy-card rounded-xl p-4 border border-navy-border text-center">
+          <p
+            className={`text-2xl font-bold ${
+              totalPnL >= 0 ? "text-profit" : "text-loss"
+            }`}
+          >
+            {totalPnL >= 0 ? "+" : ""}${totalPnL.toFixed(0)}
+          </p>
+          <p className="text-xs text-slate-400 mt-1">Total P&L</p>
+        </div>
+        <div className="bg-navy-card rounded-xl p-4 border border-navy-border text-center">
+          <p className="text-2xl font-bold text-white">{racesCompleted}</p>
+          <p className="text-xs text-slate-400 mt-1">Races</p>
+        </div>
+      </div>
+
+      {/* Untipped races list */}
+      {untippedRaces.length > 0 && (
+        <div className="bg-navy-card rounded-xl p-5 border border-navy-border">
+          <h3 className="text-sm font-bold text-gold mb-3 uppercase tracking-wide">
+            Tips Needed ({untippedRaces.length})
+          </h3>
+          <div className="space-y-2">
+            {untippedRaces.map((race) => (
+              <a
+                key={race.id}
+                href={`/races/${race.id}`}
+                className="flex justify-between items-center text-sm py-1.5 px-2 -mx-2 rounded hover:bg-navy-light transition"
+              >
+                <div>
+                  <span className="font-medium">{race.name}</span>
+                  <span className="text-xs text-slate-500 ml-2">{race.venue}</span>
+                </div>
+                <span className="text-gold text-xs font-semibold">Tip &rarr;</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Results */}
+      {recentResults.length > 0 && (
+        <div className="bg-navy-card rounded-xl p-5 border border-navy-border">
+          <h3 className="text-sm font-bold text-gold mb-3 uppercase tracking-wide">
+            Recent Results
+          </h3>
+          <div className="space-y-2">
+            {recentResults.map((entry) => (
+              <div key={entry.id} className="flex justify-between text-sm">
+                <span className="text-slate-300">{entry.race.name}</span>
+                <span
+                  className={`font-semibold ${
+                    entry.profit >= 0 ? "text-profit" : "text-loss"
+                  }`}
+                >
+                  {entry.profit >= 0 ? "+" : ""}${entry.profit.toFixed(0)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Welcome message (show only when no activity) */}
+      {recentResults.length === 0 && untippedRaces.length === 0 && !nextCutoff && (
+        <div className="bg-navy-card rounded-xl p-6 border border-navy-border">
+          <h3 className="text-lg font-bold mb-2">
+            Welcome, {user.username}!
+          </h3>
+          <p className="text-slate-400 text-sm leading-relaxed">
+            When the carnival is active, you&apos;ll see open races to tip on,
+            your results, and leaderboard position here.
+          </p>
+          {user.role === "admin" && (
+            <p className="text-gold text-sm mt-3">
+              Head to the{" "}
+              <a href="/admin" className="underline">
+                Admin panel
+              </a>{" "}
+              to manage races and enter results.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,236 @@
+// PostgreSQL version of the schema — used for production deployments
+// Copy this over prisma/schema.prisma before deploying to AWS
+//
+// The ONLY difference from the SQLite schema is the datasource provider.
+// All models, relations, and indexes are identical.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  username      String   @unique
+  email         String   @unique
+  passwordHash  String
+  role          String   @default("member") // "member" | "admin"
+  isFinancial   Boolean  @default(false)
+  inviteCodeUsed String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tips          Tip[]
+  ledgerEntries Ledger[]
+  notifications Notification[]
+  pushSubs      PushSubscription[]
+  inviteCodesCreated InviteCode[] @relation("CreatedBy")
+  inviteCodeUsedBy   InviteCode?  @relation("UsedBy")
+}
+
+model InviteCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  createdBy String
+  usedBy    String?   @unique
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  creator   User      @relation("CreatedBy", fields: [createdBy], references: [id])
+  usedByUser User?    @relation("UsedBy", fields: [usedBy], references: [id])
+}
+
+model Carnival {
+  id          String   @id @default(cuid())
+  name        String
+  year        Int      @unique
+  startDate   DateTime
+  endDate     DateTime
+  entryFee    Float    @default(55.0)
+  status      String   @default("upcoming") // "upcoming" | "active" | "completed"
+  prizeConfig String   @default("{}") // JSON string
+  createdAt   DateTime @default(now())
+
+  rounds      Round[]
+  honourRoll  HonourRoll[]
+}
+
+model Round {
+  id         String   @id @default(cuid())
+  carnivalId String
+  number     Int
+  name       String
+  raceDate   DateTime
+  cutoffAt   DateTime
+  status     String   @default("upcoming") // "upcoming" | "open" | "locked" | "settled"
+  createdAt  DateTime @default(now())
+
+  carnival   Carnival @relation(fields: [carnivalId], references: [id])
+  races      Race[]
+
+  @@unique([carnivalId, number])
+}
+
+model Race {
+  id                String    @id @default(cuid())
+  roundId           String
+  betfairMarketId   String?
+  betfairPlaceMarketId String?
+  name              String
+  venue             String
+  distance          Int
+  raceTime          DateTime
+  raceNumber        Int       @default(0)
+  status            String    @default("upcoming") // "upcoming" | "open" | "closed" | "final" | "abandoned"
+  numPlacePositions Int       @default(3)
+  grade             String    @default("G1") // "G1" | "G2" | "G3" | "Listed" | "SC"
+  prizePool         String?
+  raceType          String?   // "WFA" | "Quality Hcp" | "Open Hcp" | "3yo SW" etc
+  createdAt         DateTime  @default(now())
+  settledAt         DateTime?
+
+  round     Round     @relation(fields: [roundId], references: [id])
+  runners   Runner[]
+  results   Result[]
+  tips      Tip[]
+  ledger    Ledger[]
+}
+
+model Runner {
+  id            String    @id @default(cuid())
+  raceId        String
+  betfairRunnerId String?
+  name          String
+  barrier       Int?
+  jockey        String?
+  trainer       String?
+  weight        Float?
+  isScratched   Boolean   @default(false)
+  scratchedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  race          Race      @relation(fields: [raceId], references: [id])
+  results       Result[]
+  tipLines      TipLine[] @relation("PrimaryRunner")
+  backupLines   TipLine[] @relation("BackupRunner")
+  effectiveLines TipLine[] @relation("EffectiveRunner")
+
+  @@unique([raceId, name])
+}
+
+model Result {
+  id              String  @id @default(cuid())
+  raceId          String
+  runnerId        String
+  finishPosition  Int
+  winDividend     Float?
+  placeDividend   Float?
+  isDeadHeat      Boolean @default(false)
+  deadHeatFactor  Float   @default(1.0)
+  isProtest       Boolean @default(false)
+  source          String  @default("betfair") // "betfair" | "manual"
+  createdAt       DateTime @default(now())
+
+  race    Race   @relation(fields: [raceId], references: [id])
+  runner  Runner @relation(fields: [runnerId], references: [id])
+
+  @@unique([raceId, runnerId])
+}
+
+model Tip {
+  id          String   @id @default(cuid())
+  userId      String
+  raceId      String
+  status      String   @default("active") // "active" | "locked" | "settled"
+  submittedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id])
+  race     Race      @relation(fields: [raceId], references: [id])
+  tipLines TipLine[]
+  ledger   Ledger[]
+
+  @@unique([userId, raceId])
+}
+
+model TipLine {
+  id              String  @id @default(cuid())
+  tipId           String
+  runnerId        String
+  backupRunnerId  String?
+  betType         String  // "win" | "place"
+  amount          Float
+  isBackupActive  Boolean @default(false)
+  effectiveRunnerId String?
+
+  tip             Tip     @relation(fields: [tipId], references: [id], onDelete: Cascade)
+  runner          Runner  @relation("PrimaryRunner", fields: [runnerId], references: [id])
+  backupRunner    Runner? @relation("BackupRunner", fields: [backupRunnerId], references: [id])
+  effectiveRunner Runner? @relation("EffectiveRunner", fields: [effectiveRunnerId], references: [id])
+}
+
+model Ledger {
+  id        String   @id @default(cuid())
+  userId    String
+  raceId    String
+  tipId     String?
+  stake     Float    @default(-100.0)
+  returns   Float    @default(0.0)
+  profit    Float    @default(-100.0)
+  breakdown String   @default("[]") // JSON string
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  race Race @relation(fields: [raceId], references: [id])
+  tip  Tip? @relation(fields: [tipId], references: [id])
+
+  @@unique([userId, raceId])
+}
+
+model HonourRoll {
+  id                String  @id @default(cuid())
+  carnivalId        String?
+  year              Int     @unique
+  winnerName        String
+  winnerProfit      Float
+  runnerUpName      String?
+  runnerUpProfit    Float?
+  thirdName         String?
+  thirdProfit       Float?
+  woodenSpoonName   String?
+  woodenSpoonProfit Float?
+  entrants          Int?
+  races             Int?
+  notes             String?
+  createdAt         DateTime @default(now())
+
+  carnival Carnival? @relation(fields: [carnivalId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String
+  keys      String   // JSON string with p256dh + auth
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
