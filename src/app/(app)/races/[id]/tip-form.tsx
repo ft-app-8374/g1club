@@ -297,19 +297,18 @@ export function TipForm({
               {minutesLeft}min left
             </p>
           )}
-          <p className="text-sm text-slate-700">
-            Budget: <span className="font-bold text-slate-900">$100</span>
-          </p>
+          <div className="text-right">
+            <p className="text-2xl font-bold text-slate-900">$100</p>
+            <p className="text-xs text-slate-400 uppercase tracking-wide">Race Budget</p>
+          </div>
           <p
-            className={`text-xs ${
+            className={`text-lg font-bold ${
               Math.abs(remaining) < 0.01
                 ? "text-profit"
-                : remaining < 0
-                  ? "text-loss"
-                  : "text-slate-500"
+                : "text-loss"
             }`}
           >
-            Remaining: ${remaining.toFixed(0)}
+            ${remaining.toFixed(0)} remaining
           </p>
         </div>
       </div>
