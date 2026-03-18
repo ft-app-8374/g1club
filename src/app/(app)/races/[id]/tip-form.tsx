@@ -273,8 +273,6 @@ export function TipForm({
   // Can we add more lines? Each-way uses 2 API slots
   const apiLineCount = getApiLineCount();
   const canAddLine = apiLineCount < 4;
-  // If adding an each-way would exceed 4, we can still add a regular line
-  const canAddEachWay = apiLineCount + 2 <= 4;
 
   // Per-line validation errors for inline display
   function getLineErrors(index: number): string[] {
@@ -397,7 +395,9 @@ export function TipForm({
                   >
                     <option value="win">Win</option>
                     <option value="place">Place</option>
-                    <option value="eachway" disabled={!canAddEachWay && line.betType !== "eachway"}>
+                    <option value="eachway" disabled={
+                      line.betType !== "eachway" && apiLineCount + 1 > 4
+                    }>
                       Each Way
                     </option>
                   </select>
