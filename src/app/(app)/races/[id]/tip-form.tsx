@@ -146,10 +146,14 @@ export function TipForm({
     setLines((prev) => prev.filter((_, i) => i !== index));
   }
 
-  // Get runners already selected as primary in other lines
+  // Get runners already used with the same bet type in other lines
+  // Same horse with different bet type (win vs place) is allowed
   function getUsedRunnerIds(excludeIndex: number): Set<string> {
+    const currentBetType = lines[excludeIndex]?.betType || "win";
     return new Set(
-      lines.filter((_, i) => i !== excludeIndex).map((l) => l.runnerId)
+      lines
+        .filter((l, i) => i !== excludeIndex && l.betType === currentBetType)
+        .map((l) => l.runnerId)
     );
   }
 
@@ -216,6 +220,9 @@ export function TipForm({
   }
 
   async function handleDelete() {
+    if (!confirm("Are you sure you want to delete your tips for this race?")) {
+      return;
+    }
     setLoading(true);
     try {
       await fetch(`/api/tips?raceId=${raceId}`, { method: "DELETE" });
