@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
 const menuItems = [
-  { href: "/dashboard", label: "Dashboard", icon: "📊" },
+  { href: "/dashboard", label: "Home", icon: "🏠" },
+  { href: "/calendar", label: "Calendar", icon: "📅" },
   { href: "/races", label: "Races", icon: "🏇" },
   { href: "/leaderboard", label: "Leaderboard", icon: "🏆" },
   { href: "/honour-roll", label: "Honour Roll", icon: "📜" },
