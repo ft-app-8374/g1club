@@ -149,11 +149,13 @@ export async function POST(req: Request) {
       }
     }
 
-    // Check no duplicate primary runners
-    const primaryRunners = lines.map((l: { runnerId: string }) => l.runnerId);
-    if (new Set(primaryRunners).size !== primaryRunners.length) {
+    // Check no duplicate runner + bet type combos (same horse win + place is OK)
+    const runnerBetKeys = lines.map(
+      (l: { runnerId: string; betType: string }) => `${l.runnerId}:${l.betType}`
+    );
+    if (new Set(runnerBetKeys).size !== runnerBetKeys.length) {
       return NextResponse.json(
-        { error: "Cannot select the same horse in multiple bets" },
+        { error: "Cannot place the same bet type on the same horse twice" },
         { status: 400 }
       );
     }
