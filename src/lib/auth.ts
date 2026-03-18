@@ -31,6 +31,7 @@ export const authOptions: NextAuthOptions = {
           username: user.username,
           email: user.email,
           role: user.role,
+          isFinancial: user.isFinancial,
         };
       },
     }),
@@ -43,6 +44,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.username = (user as { username: string }).username;
         token.role = (user as { role: string }).role;
+        token.isFinancial = (user as { isFinancial: boolean }).isFinancial;
       }
       return token;
     },
@@ -52,6 +54,7 @@ export const authOptions: NextAuthOptions = {
         username: token.username as string,
         email: token.email as string,
         role: token.role as string,
+        isFinancial: (token.isFinancial as boolean) ?? false,
       };
       return session;
     },

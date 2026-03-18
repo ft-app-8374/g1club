@@ -19,6 +19,7 @@ export default async function AppLayout({
       <AppHeader
         isAdmin={session.user.role === "admin"}
         username={session.user.username}
+        isFinancial={session.user.isFinancial ?? false}
       />
 
       <main className="max-w-5xl mx-auto px-4 py-6">{children}</main>

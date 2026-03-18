@@ -7,12 +7,14 @@ declare module "next-auth" {
       username: string;
       email: string;
       role: string;
+      isFinancial: boolean;
     };
   }
 
   interface User {
     username: string;
     role: string;
+    isFinancial: boolean;
   }
 }
 
@@ -21,5 +23,6 @@ declare module "next-auth/jwt" {
     id: string;
     username: string;
     role: string;
+    isFinancial: boolean;
   }
 }

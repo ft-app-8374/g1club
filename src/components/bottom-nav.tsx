@@ -9,15 +9,16 @@ const menuItems = [
   { href: "/races", label: "Races", icon: "🏇" },
   { href: "/leaderboard", label: "Leaderboard", icon: "🏆" },
   { href: "/honour-roll", label: "Honour Roll", icon: "📜" },
-  { href: "/profile", label: "Profile", icon: "👤" },
 ];
 
 export function AppHeader({
   isAdmin,
   username,
+  isFinancial = false,
 }: {
   isAdmin: boolean;
   username: string;
+  isFinancial?: boolean;
 }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -74,14 +75,21 @@ export function AppHeader({
             Group 1 <span className="text-gold">Club</span>
           </h1>
 
-          {/* Right: avatar */}
-          <div className="flex items-center gap-2">
+          {/* Right: avatar → links to profile */}
+          <Link href="/profile" className="flex items-center gap-2">
+            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+              isFinancial
+                ? "bg-green-50 text-profit border border-green-200"
+                : "bg-red-50 text-loss border border-red-200"
+            }`}>
+              {isFinancial ? "Financial" : "Non-financial"}
+            </span>
             <div className="w-8 h-8 rounded-full bg-gold-accent flex items-center justify-center">
               <span className="text-sm font-bold text-gold">
                 {username[0]?.toUpperCase()}
               </span>
             </div>
-          </div>
+          </Link>
         </div>
       </header>
 
@@ -129,9 +137,18 @@ export function AppHeader({
                 </div>
                 <div>
                   <p className="text-white font-semibold text-sm">{username}</p>
-                  {isAdmin && (
-                    <span className="text-xs text-gold">Admin</span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {isAdmin && (
+                      <span className="text-xs text-gold">Admin</span>
+                    )}
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                      isFinancial
+                        ? "bg-green-500/20 text-green-300"
+                        : "bg-red-500/20 text-red-300"
+                    }`}>
+                      {isFinancial ? "Financial" : "Non-financial"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
