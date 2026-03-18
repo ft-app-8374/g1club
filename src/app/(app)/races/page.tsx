@@ -67,7 +67,7 @@ export default async function RacesPage() {
                   month: "short",
                   day: "numeric",
                 })}{" "}
-                &middot; Round {round.number}
+                · Round {round.number}
               </h3>
               {!isPast && roundRaces.some((r) => r.status === "open") && (
                 <span className="text-xs text-gold bg-gold-accent px-2 py-0.5 rounded font-medium">
@@ -97,9 +97,9 @@ export default async function RacesPage() {
                           )}
                         </div>
                         <p className="text-sm text-slate-500 mt-0.5">
-                          {race.venue} &middot; {race.distance}m
-                          {race.raceNumber > 0 && ` &middot; R${race.raceNumber}`}
-                          {race.prizePool && ` &middot; ${race.prizePool}`}
+                          {race.venue} · {race.distance}m
+                          {race.raceNumber > 0 && ` · R${race.raceNumber}`}
+                          {race.prizePool && ` · ${race.prizePool}`}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0 ml-2">
