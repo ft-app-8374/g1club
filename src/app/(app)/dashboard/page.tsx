@@ -50,6 +50,22 @@ export default async function DashboardPage() {
   const tippedRaceIds = new Set(myTips.map((t) => t.raceId));
   const untippedRaces = openRaces.filter((r) => !tippedRaceIds.has(r.id));
 
+  // Get user's active bets (tips for open races)
+  const activeBets = await prisma.tip.findMany({
+    where: {
+      userId: user.id,
+      race: { status: { in: ["open", "closed"] } },
+    },
+    include: {
+      race: { select: { name: true, venue: true, raceTime: true } },
+      tipLines: {
+        include: { runner: { select: { name: true } } },
+      },
+    },
+    orderBy: { race: { raceTime: "asc" } },
+    take: 10,
+  });
+
   // Recent results (last 5 ledger entries)
   const recentResults = await prisma.ledger.findMany({
     where: { userId: user.id },
@@ -131,6 +147,42 @@ export default async function DashboardPage() {
                   <span className="text-xs text-slate-500 ml-2">{race.venue}</span>
                 </div>
                 <span className="text-gold text-xs font-semibold">Tip &rarr;</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Active Bets */}
+      {activeBets.length > 0 && (
+        <div className="bg-white rounded-card p-5 border border-surface-muted shadow-card">
+          <h3 className="text-sm font-bold text-gold mb-3 uppercase tracking-wide">
+            Your Bets ({activeBets.length})
+          </h3>
+          <div className="space-y-3">
+            {activeBets.map((bet) => (
+              <a
+                key={bet.id}
+                href={`/races/${bet.raceId}`}
+                className="block bg-surface rounded-lg p-3 border border-surface-muted hover:border-gold/30 transition"
+              >
+                <div className="flex justify-between items-start mb-1.5">
+                  <span className="font-medium text-sm text-slate-800">{bet.race.name}</span>
+                  <span className="text-xs text-slate-400">
+                    {new Date(bet.race.raceTime).toLocaleTimeString("en-AU", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600">
+                  {bet.tipLines
+                    .map(
+                      (tl) =>
+                        `$${tl.amount} ${tl.betType.toUpperCase()} ${tl.runner.name}`
+                    )
+                    .join(", ")}
+                </p>
               </a>
             ))}
           </div>

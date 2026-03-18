@@ -116,7 +116,7 @@ export default async function RaceDetailPage({
             })}
           </p>
           <p className="text-xs text-slate-500 mt-1">
-            30 min before first race at {race.venue}
+            First race at {race.venue}
           </p>
         </div>
       )}

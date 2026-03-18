@@ -33,6 +33,33 @@ export default async function ProfilePage() {
     ? seasonResults.reduce((best, s) => s.rank < best.rank ? s : best)
     : null;
 
+  // Podium finishes
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const goldCount = seasonResults.filter((s) => s.rank === 1).length;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const silverCount = seasonResults.filter((s) => s.rank === 2).length;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const bronzeCount = seasonResults.filter((s) => s.rank === 3).length;
+
+  // Wooden spoon: check if rank equals the highest rank for that year
+  // Query the max rank per year from SeasonResult
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let woodenSpoonCount = 0;
+  if (seasonResults.length > 0) {
+    const years = seasonResults.map((s) => s.year);
+    const maxRanks = await prisma.seasonResult.groupBy({
+      by: ["year"],
+      where: { year: { in: years } },
+      _max: { rank: true },
+    });
+    const maxRankByYear = new Map(
+      maxRanks.map((r) => [r.year, r._max.rank])
+    );
+    woodenSpoonCount = seasonResults.filter(
+      (s) => s.rank === maxRankByYear.get(s.year) && (maxRankByYear.get(s.year) || 0) > 1
+    ).length;
+  }
+
   return (
     <div className="space-y-6">
       <div className="text-center py-6">
@@ -83,6 +110,32 @@ export default async function ProfilePage() {
               {bestRank!.rank === 1 ? "🏆" : ""} #{bestRank!.rank}
             </p>
             <p className="text-xs text-slate-400">{bestRank!.year}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Podium Finishes */}
+      {seasonResults.length > 0 && (goldCount > 0 || silverCount > 0 || bronzeCount > 0 || woodenSpoonCount > 0) && (
+        <div className="grid grid-cols-4 gap-2">
+          <div className="bg-white rounded-card p-3 border border-surface-muted shadow-card text-center">
+            <p className="text-2xl mb-1">🥇</p>
+            <p className="text-xl font-bold text-slate-900">{goldCount}</p>
+            <p className="text-xs text-slate-400">1st</p>
+          </div>
+          <div className="bg-white rounded-card p-3 border border-surface-muted shadow-card text-center">
+            <p className="text-2xl mb-1">🥈</p>
+            <p className="text-xl font-bold text-slate-900">{silverCount}</p>
+            <p className="text-xs text-slate-400">2nd</p>
+          </div>
+          <div className="bg-white rounded-card p-3 border border-surface-muted shadow-card text-center">
+            <p className="text-2xl mb-1">🥉</p>
+            <p className="text-xl font-bold text-slate-900">{bronzeCount}</p>
+            <p className="text-xs text-slate-400">3rd</p>
+          </div>
+          <div className="bg-white rounded-card p-3 border border-surface-muted shadow-card text-center">
+            <p className="text-2xl mb-1">🥄</p>
+            <p className="text-xl font-bold text-slate-900">{woodenSpoonCount}</p>
+            <p className="text-xs text-slate-400">Last</p>
           </div>
         </div>
       )}

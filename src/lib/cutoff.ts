@@ -1,11 +1,9 @@
 import { prisma } from "./prisma";
 
-const CUTOFF_MINUTES_BEFORE_FIRST_RACE = 30;
-
 /**
  * Calculate the tip cutoff time for a specific race.
  *
- * Cutoff = 30 minutes before the first race at the same venue on the same day.
+ * Cutoff = the start time of the first race at the same venue on the same day.
  * This means all tips for a given track are locked at the same time,
  * regardless of which race number the tip is for.
  *
@@ -25,8 +23,8 @@ export async function getCutoffForRace(raceId: string): Promise<Date> {
 
 /**
  * Get cutoff for a venue on a specific race day.
- * Finds the earliest race time at that venue in the same round,
- * then subtracts 30 minutes.
+ * Finds the earliest race time at that venue in the same round.
+ * Cutoff IS the first race start time (no subtraction).
  */
 export async function getCutoffForVenueOnDay(
   venue: string,
@@ -45,9 +43,7 @@ export async function getCutoffForVenueOnDay(
   });
 
   const firstRaceTime = earliestRace?.raceTime || raceTime;
-  const cutoff = new Date(firstRaceTime);
-  cutoff.setMinutes(cutoff.getMinutes() - CUTOFF_MINUTES_BEFORE_FIRST_RACE);
-  return cutoff;
+  return new Date(firstRaceTime);
 }
 
 /**
@@ -79,9 +75,7 @@ export async function getVenueCutoffs(roundId: string): Promise<Map<string, Date
   const cutoffs = new Map<string, Date>();
   for (const race of races) {
     if (!cutoffs.has(race.venue)) {
-      const cutoff = new Date(race.raceTime);
-      cutoff.setMinutes(cutoff.getMinutes() - CUTOFF_MINUTES_BEFORE_FIRST_RACE);
-      cutoffs.set(race.venue, cutoff);
+      cutoffs.set(race.venue, new Date(race.raceTime));
     }
   }
 
@@ -131,9 +125,7 @@ export async function getNextCutoff(): Promise<{
     }
 
     for (const venue of Array.from(venueFirstRace.keys())) {
-      const firstRaceTime = venueFirstRace.get(venue)!;
-      const cutoff = new Date(firstRaceTime);
-      cutoff.setMinutes(cutoff.getMinutes() - CUTOFF_MINUTES_BEFORE_FIRST_RACE);
+      const cutoff = new Date(venueFirstRace.get(venue)!);
 
       if (cutoff > now) {
         if (!nearest || cutoff < nearest.cutoff) {

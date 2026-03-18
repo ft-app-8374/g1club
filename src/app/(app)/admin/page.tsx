@@ -2,9 +2,11 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getCutoffForVenueOnDay } from "@/lib/cutoff";
 import { InviteCodeGenerator } from "./invite-generator";
 import { RaceManager } from "./race-manager";
 import { ResultEntry } from "./result-entry";
+import { MemberTips } from "./member-tips";
 import { AdminTabs } from "./admin-tabs";
 
 export default async function AdminPage() {
@@ -91,38 +93,90 @@ export default async function AdminPage() {
     }))
   ) || [];
 
+  // Build per-user tip data for the active carnival
+  // Flatten races but keep roundId context
+  const allRacesWithRound = carnival?.rounds.flatMap((r) =>
+    r.races.map((race) => ({ ...race, roundId: r.id }))
+  ) || [];
+  const now = new Date();
+
+  // Compute cutoff status for each race
+  const raceCutoffMap = new Map<string, boolean>();
+  for (const race of allRacesWithRound) {
+    const cutoff = await getCutoffForVenueOnDay(race.venue, race.raceTime, race.roundId);
+    raceCutoffMap.set(race.id, now >= cutoff);
+  }
+
+  // Query all tips for races in this carnival
+  const allTips = carnival
+    ? await prisma.tip.findMany({
+        where: {
+          raceId: { in: allRacesWithRound.map((r) => r.id) },
+        },
+        include: {
+          tipLines: {
+            include: {
+              runner: { select: { id: true, name: true, runnerNumber: true } },
+              backupRunner: { select: { id: true, name: true, runnerNumber: true } },
+            },
+          },
+        },
+      })
+    : [];
+
+  // Build a map: userId -> array of tip data per race
+  const tipsByUser = new Map<string, typeof allTips>();
+  for (const tip of allTips) {
+    const existing = tipsByUser.get(tip.userId) || [];
+    existing.push(tip);
+    tipsByUser.set(tip.userId, existing);
+  }
+
+  // Build member data with tips for MemberTips component
+  const membersWithTips = members.map((m) => {
+    const userTips = tipsByUser.get(m.id) || [];
+    const userTipsByRace = new Map(userTips.map((t) => [t.raceId, t]));
+
+    return {
+      id: m.id,
+      username: m.username,
+      email: m.email,
+      role: m.role,
+      isFinancial: m.isFinancial,
+      tips: allRacesWithRound.map((race) => {
+        const tip = userTipsByRace.get(race.id);
+        return {
+          id: tip?.id || "",
+          raceId: race.id,
+          raceName: race.name,
+          raceVenue: race.venue,
+          raceStatus: race.status,
+          cutoffPassed: raceCutoffMap.get(race.id) || false,
+          tipLines: (tip?.tipLines || []).map((tl) => ({
+            id: tl.id,
+            runnerId: tl.runnerId,
+            backupRunnerId: tl.backupRunnerId,
+            betType: tl.betType,
+            amount: tl.amount,
+            runner: tl.runner,
+            backupRunner: tl.backupRunner,
+          })),
+          runners: race.runners.map((r) => ({
+            id: r.id,
+            name: r.name,
+            barrier: r.barrier,
+            runnerNumber: r.runnerNumber,
+            isScratched: r.isScratched,
+          })),
+        };
+      }),
+    };
+  });
+
   // Members tab content
   const membersContent = (
     <div className="space-y-4">
-      <div className="space-y-2">
-        {members.map((m) => (
-          <div
-            key={m.id}
-            className="flex items-center justify-between text-sm bg-surface rounded-lg px-3 py-2"
-          >
-            <div>
-              <span className="font-medium text-slate-900">{m.username}</span>
-              <span className="text-slate-400 ml-2 text-xs">{m.email}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {m.role === "admin" && (
-                <span className="text-xs bg-gold-accent text-gold px-2 py-0.5 rounded font-medium">
-                  Admin
-                </span>
-              )}
-              <span
-                className={`text-xs px-2 py-0.5 rounded font-medium ${
-                  m.isFinancial
-                    ? "bg-green-50 text-profit"
-                    : "bg-red-50 text-loss"
-                }`}
-              >
-                {m.isFinancial ? "Paid" : "Unpaid"}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
+      <MemberTips members={membersWithTips} />
 
       {/* Invite Codes */}
       <div className="pt-4 border-t border-surface-muted">
