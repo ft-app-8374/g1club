@@ -77,7 +77,7 @@ export default async function AdminPage() {
     })),
   })) || [];
 
-  // Races available for result entry
+  // Races available for result entry + settled races with results
   const racesForResults = carnival?.rounds.flatMap((r) =>
     r.races.map((race) => ({
       id: race.id,
@@ -92,6 +92,39 @@ export default async function AdminPage() {
       })),
     }))
   ) || [];
+
+  // Fetch results for settled races
+  const settledResults = await prisma.result.findMany({
+    where: {
+      race: { status: "final" },
+      raceId: { in: racesForResults.map((r) => r.id) },
+    },
+    include: {
+      runner: { select: { name: true } },
+      race: { select: { name: true, venue: true } },
+    },
+    orderBy: [{ raceId: "asc" }, { finishPosition: "asc" }],
+  });
+
+  // Group results by race
+  const resultsByRace = new Map<string, typeof settledResults>();
+  for (const result of settledResults) {
+    const existing = resultsByRace.get(result.raceId) || [];
+    existing.push(result);
+    resultsByRace.set(result.raceId, existing);
+  }
+
+  const settledRaceResults = racesForResults
+    .filter((r) => r.status === "final")
+    .map((r) => ({
+      ...r,
+      results: (resultsByRace.get(r.id) || []).slice(0, 4).map((res) => ({
+        position: res.finishPosition,
+        name: res.runner.name,
+        winDividend: res.winDividend,
+        placeDividend: res.placeDividend,
+      })),
+    }));
 
   // Build per-user tip data for the active carnival
   // Flatten races but keep roundId context
@@ -223,7 +256,36 @@ export default async function AdminPage() {
       <AdminTabs
         membersContent={membersContent}
         racesContent={<RaceManager rounds={roundsData} />}
-        resultsContent={<ResultEntry races={racesForResults} />}
+        resultsContent={
+          <div className="space-y-6">
+            <ResultEntry races={racesForResults} />
+            {settledRaceResults.length > 0 && (
+              <div>
+                <h3 className="text-sm font-bold text-gold mb-3 uppercase tracking-wide">
+                  Settled Results
+                </h3>
+                <div className="space-y-3">
+                  {settledRaceResults.map((race) => (
+                    <div key={race.id} className="bg-surface rounded-lg p-3 border border-surface-muted">
+                      <p className="text-sm font-medium text-slate-900 mb-2">
+                        {race.name} <span className="text-xs text-slate-400">{race.venue}</span>
+                      </p>
+                      {race.results.map((res) => (
+                        <div key={res.position} className="flex justify-between text-xs text-slate-600">
+                          <span>{res.position}. {res.name}</span>
+                          <span>
+                            {res.winDividend ? `W $${res.winDividend.toFixed(2)}` : ""}
+                            {res.placeDividend ? ` P $${res.placeDividend.toFixed(2)}` : ""}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        }
         memberCount={members.length}
         raceCount={totalRaces}
       />

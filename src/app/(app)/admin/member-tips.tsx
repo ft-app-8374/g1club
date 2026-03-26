@@ -217,11 +217,15 @@ export function MemberTips({ members }: { members: Member[] }) {
                           <span className="text-xs text-slate-400 ml-2">
                             {tip.raceVenue}
                           </span>
-                          {tip.cutoffPassed && (
-                            <span className="text-xs text-orange-500 ml-2">
-                              (cutoff passed)
+                          {tip.raceStatus === "final" ? (
+                            <span className="text-xs text-profit ml-2">
+                              (settled)
                             </span>
-                          )}
+                          ) : tip.cutoffPassed ? (
+                            <span className="text-xs text-orange-500 ml-2">
+                              (locked)
+                            </span>
+                          ) : null}
                         </div>
                         {!isEditing && (
                           <button

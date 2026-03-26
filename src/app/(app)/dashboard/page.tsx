@@ -66,10 +66,19 @@ export default async function DashboardPage() {
     take: 10,
   });
 
-  // Recent results (last 5 ledger entries)
+  // Recent results (last 5 ledger entries) — include tip details
   const recentResults = await prisma.ledger.findMany({
     where: { userId: user.id },
-    include: { race: { select: { name: true, venue: true } } },
+    include: {
+      race: { select: { name: true, venue: true } },
+      tip: {
+        include: {
+          tipLines: {
+            include: { runner: { select: { name: true } } },
+          },
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
     take: 5,
   });
@@ -196,17 +205,29 @@ export default async function DashboardPage() {
           <h3 className="text-sm font-bold text-gold mb-3 uppercase tracking-wide">
             Recent Results
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {recentResults.map((entry) => (
-              <div key={entry.id} className="flex justify-between text-sm">
-                <span className="text-slate-700">{entry.race.name}</span>
-                <span
-                  className={`font-semibold ${
-                    entry.profit >= 0 ? "text-profit" : "text-loss"
-                  }`}
-                >
-                  {entry.profit >= 0 ? "+" : ""}${entry.profit.toFixed(0)}
-                </span>
+              <div key={entry.id} className="bg-surface rounded-lg p-3 border border-surface-muted">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="text-sm font-medium text-slate-800">{entry.race.name}</span>
+                  <span
+                    className={`text-sm font-semibold ${
+                      entry.profit >= 0 ? "text-profit" : "text-loss"
+                    }`}
+                  >
+                    {entry.profit >= 0 ? "+" : ""}${entry.profit.toFixed(0)}
+                  </span>
+                </div>
+                {entry.tip && entry.tip.tipLines.length > 0 && (
+                  <p className="text-xs text-slate-500">
+                    {entry.tip.tipLines
+                      .map((tl) => `$${tl.amount} ${tl.betType.toUpperCase()} ${tl.runner.name}`)
+                      .join(", ")}
+                  </p>
+                )}
+                {!entry.tip && (
+                  <p className="text-xs text-slate-400 italic">No tip submitted</p>
+                )}
               </div>
             ))}
           </div>
