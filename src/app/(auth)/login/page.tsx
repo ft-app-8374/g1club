@@ -90,12 +90,17 @@ export default function LoginPage() {
             {loading ? "Logging in..." : "Log In"}
           </button>
 
-          <p className="text-center text-sm text-slate-500 mt-4">
-            Have an invite code?{" "}
-            <Link href="/register" className="text-gold hover:text-gold-dark font-medium">
-              Register
+          <div className="flex justify-between items-center mt-4 text-sm text-slate-500">
+            <Link href="/forgot-password" className="text-slate-400 hover:text-gold transition">
+              Forgot password?
             </Link>
-          </p>
+            <span>
+              Have an invite code?{" "}
+              <Link href="/register" className="text-gold hover:text-gold-dark font-medium">
+                Register
+              </Link>
+            </span>
+          </div>
         </form>
       </div>
     </div>

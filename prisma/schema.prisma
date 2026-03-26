@@ -17,7 +17,9 @@ model User {
   id            String   @id @default(cuid())
   username      String   @unique
   email         String   @unique
-  passwordHash  String
+  passwordHash       String
+  resetToken         String?  @unique
+  resetTokenExpiry   DateTime?
   role          String   @default("member") // "member" | "admin"
   isFinancial   Boolean  @default(false)
   inviteCodeUsed String?

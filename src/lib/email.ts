@@ -159,3 +159,25 @@ export function resultsEmail(username: string, raceName: string, profit: number,
     `),
   };
 }
+
+export function resetPasswordEmail(username: string, token: string): EmailOptions {
+  const resetUrl = `${APP_URL}/reset-password?token=${token}`;
+  return {
+    to: "",
+    subject: "Reset Your Password — Group 1 Club",
+    html: wrapTemplate(`
+      <h2 style="color: #e2e8f0; margin-top: 0;">Hey ${escapeHtml(username)},</h2>
+      <p style="color: #94a3b8; line-height: 1.6;">
+        We received a request to reset your password. Click the button below to choose a new one.
+      </p>
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="${resetUrl}" style="background-color: #d4a843; color: #0a0f1e; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">
+          Reset Password
+        </a>
+      </div>
+      <p style="color: #64748b; line-height: 1.6; font-size: 13px;">
+        This link expires in 1 hour. If you didn't request this, you can safely ignore this email.
+      </p>
+    `),
+  };
+}
