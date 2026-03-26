@@ -278,8 +278,8 @@ export default async function AdminPage() {
                         <div key={res.position} className="flex justify-between text-xs text-slate-600">
                           <span>{res.position}. {res.name}</span>
                           <span>
-                            {res.winDividend ? `W $${res.winDividend.toFixed(2)}` : ""}
-                            {res.placeDividend ? ` P $${res.placeDividend.toFixed(2)}` : ""}
+                            {res.position === 1 && res.winDividend ? `W $${res.winDividend.toFixed(2)}` : ""}
+                            {res.position <= 3 && res.placeDividend ? `${res.position === 1 ? " " : ""}P $${res.placeDividend.toFixed(2)}` : ""}
                           </span>
                         </div>
                       ))}
