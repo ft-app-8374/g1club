@@ -6,16 +6,18 @@ interface AdminTabsProps {
   membersContent: ReactNode;
   racesContent: ReactNode;
   resultsContent: ReactNode;
+  feedContent: ReactNode;
   memberCount: number;
   raceCount: number;
 }
 
-export function AdminTabs({ membersContent, racesContent, resultsContent, memberCount, raceCount }: AdminTabsProps) {
-  const [tab, setTab] = useState<"races" | "results" | "members">("races");
+export function AdminTabs({ membersContent, racesContent, resultsContent, feedContent, memberCount, raceCount }: AdminTabsProps) {
+  const [tab, setTab] = useState<"races" | "results" | "members" | "feed">("races");
 
   const tabs = [
     { id: "races" as const, label: "Races", badge: raceCount },
     { id: "results" as const, label: "Results", badge: null },
+    { id: "feed" as const, label: "News", badge: null },
     { id: "members" as const, label: "Members", badge: memberCount },
   ];
 
@@ -43,6 +45,7 @@ export function AdminTabs({ membersContent, racesContent, resultsContent, member
       <div className="bg-white rounded-card p-5 border border-surface-muted shadow-card">
         {tab === "races" && racesContent}
         {tab === "results" && resultsContent}
+        {tab === "feed" && feedContent}
         {tab === "members" && membersContent}
       </div>
     </div>

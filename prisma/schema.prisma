@@ -102,6 +102,7 @@ model Race {
   results   Result[]
   tips      Tip[]
   ledger    Ledger[]
+  feedItems FeedItem[]
 }
 
 model Runner {
@@ -257,4 +258,20 @@ model PushSubscription {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
+}
+
+model FeedItem {
+  id        String   @id @default(cuid())
+  type      String   // "result" | "scratching" | "field" | "reminder" | "news" | "post"
+  title     String
+  body      String?
+  source    String?  // "system" | "rss" | "admin" | RSS source name
+  sourceUrl String?  // link to external article
+  raceId    String?  // optional link to a race
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  race Race? @relation(fields: [raceId], references: [id])
+
+  @@index([createdAt])
 }

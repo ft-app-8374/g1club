@@ -8,6 +8,8 @@ import { RaceManager } from "./race-manager";
 import { ResultEntry } from "./result-entry";
 import { MemberTips } from "./member-tips";
 import { AdminTabs } from "./admin-tabs";
+import { FeedPost } from "./feed-post";
+import { getLatestFeed } from "@/lib/feed";
 
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
@@ -241,6 +243,8 @@ export default async function AdminPage() {
     0
   ) || 0;
 
+  const feedItems = await getLatestFeed(20);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -279,6 +283,42 @@ export default async function AdminPage() {
                           </span>
                         </div>
                       ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        }
+        feedContent={
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-sm font-bold text-gold mb-3 uppercase tracking-wide">
+                New Post
+              </h3>
+              <FeedPost />
+            </div>
+            {feedItems.length > 0 && (
+              <div>
+                <h3 className="text-sm font-bold text-gold mb-3 uppercase tracking-wide">
+                  Recent Feed ({feedItems.length})
+                </h3>
+                <div className="space-y-2">
+                  {feedItems.map((item) => (
+                    <div key={item.id} className="bg-surface rounded-lg p-3 border border-surface-muted">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          {item.pinned && <span className="text-xs text-gold mr-1">pinned</span>}
+                          <span className="text-xs text-slate-400 mr-2">
+                            {item.type} &middot; {item.source}
+                          </span>
+                          <span className="text-xs text-slate-400">
+                            {new Date(item.createdAt).toLocaleDateString("en-AU", { day: "numeric", month: "short", timeZone: "Australia/Sydney" })}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-sm font-medium text-slate-900 mt-1">{item.title}</p>
+                      {item.body && <p className="text-xs text-slate-500 mt-1">{item.body}</p>}
                     </div>
                   ))}
                 </div>
