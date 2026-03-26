@@ -404,6 +404,24 @@ Resources:
             "Headers": {"Authorization": "Bearer ${CronSecret}"}
           }
 
+  # Settle races — runs every 15 min, polls Betfair for results post-race
+  CronSettleRace:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub g1club-settle-race-${Environment}
+      ScheduleExpression: rate(15 minutes)
+      FlexibleTimeWindow:
+        Mode: 'OFF'
+      Target:
+        Arn: !Sub arn:aws:scheduler:::aws-sdk:apprunner:startDeployment
+        RoleArn: !GetAtt CronRole.Arn
+        Input: !Sub |
+          {
+            "Url": "https://${AppDomain}/api/cron/settle-race",
+            "Method": "POST",
+            "Headers": {"Authorization": "Bearer ${CronSecret}"}
+          }
+
   # Send notifications — runs every 30 min
   CronNotifications:
     Type: AWS::Scheduler::Schedule
