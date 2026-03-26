@@ -50,6 +50,9 @@ export async function POST(req: Request) {
 
     let totalRunners = 0;
 
+    // Cache Race 1 start time per venue+date so we only fetch once
+    const race1Cache = new Map<string, Date | null>();
+
     for (const race of races) {
       // Search Betfair for matching market
       const dateStr = race.raceTime.toISOString().split("T")[0];
@@ -139,6 +142,37 @@ export async function POST(req: Request) {
           },
         });
         totalRunners++;
+      }
+
+      // Look up Race 1 start time at this venue (cached per venue+date)
+      const venueDateKey = `${race.venue}|${dateStr}`;
+      if (!race1Cache.has(venueDateKey)) {
+        try {
+          const allWinMarkets = await listMarketCatalogue({
+            venues: [race.venue],
+            dateFrom: `${dateStr}T00:00:00Z`,
+            dateTo: `${dateStr}T23:59:59Z`,
+            marketTypes: ["WIN"],
+            maxResults: 50,
+          });
+
+          const race1Market = allWinMarkets.find((m) => /\bR1\b/.test(m.marketName));
+          const r1Time = race1Market?.marketStartTime
+            ? new Date(race1Market.marketStartTime)
+            : null;
+          race1Cache.set(venueDateKey, r1Time);
+        } catch (err) {
+          console.error(`Failed to fetch R1 for ${venueDateKey}:`, err);
+          race1Cache.set(venueDateKey, null);
+        }
+      }
+
+      const race1StartTime = race1Cache.get(venueDateKey) ?? null;
+      if (race1StartTime) {
+        await prisma.race.updateMany({
+          where: { roundId: race.roundId, venue: race.venue },
+          data: { race1StartTime },
+        });
       }
     }
 

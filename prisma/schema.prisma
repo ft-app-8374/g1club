@@ -91,6 +91,7 @@ model Race {
   grade             String    @default("G1") // "G1" | "G2" | "G3" | "Listed" | "SC"
   prizePool         String?
   raceType          String?   // "WFA" | "Quality Hcp" | "Open Hcp" | "3yo SW" etc
+  race1StartTime    DateTime? // Race 1 start time at this venue — used as tip lockout
   createdAt         DateTime  @default(now())
   settledAt         DateTime?
 
