@@ -19,16 +19,19 @@ export async function POST(req: Request) {
     const now = new Date();
     const CUTOFF_MINUTES = 30;
 
-    // Find all open races today
-    const startOfDay = new Date(now);
+    // Find all open races today (use Sydney timezone for day boundaries)
+    const sydneyNow = new Date(now.toLocaleString("en-US", { timeZone: "Australia/Sydney" }));
+    const startOfDay = new Date(sydneyNow);
     startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(now);
-    endOfDay.setHours(23, 59, 59, 999);
+    // Convert back to UTC for DB query
+    const offsetMs = sydneyNow.getTime() - now.getTime();
+    const startOfDayUTC = new Date(startOfDay.getTime() - offsetMs);
+    const endOfDayUTC = new Date(startOfDayUTC.getTime() + 24 * 60 * 60 * 1000 - 1);
 
     const todaysRaces = await prisma.race.findMany({
       where: {
         status: "open",
-        raceTime: { gte: startOfDay, lte: endOfDay },
+        raceTime: { gte: startOfDayUTC, lte: endOfDayUTC },
       },
       select: { id: true, venue: true, raceTime: true, roundId: true },
       orderBy: { raceTime: "asc" },

@@ -24,7 +24,7 @@ export async function getCutoffForRace(raceId: string): Promise<Date> {
 /**
  * Get cutoff for a venue on a specific race day.
  * Finds the earliest race time at that venue in the same round.
- * Cutoff IS the first race start time (no subtraction).
+ * Cutoff = 30 minutes before the first race at that venue.
  */
 export async function getCutoffForVenueOnDay(
   venue: string,
@@ -43,7 +43,9 @@ export async function getCutoffForVenueOnDay(
   });
 
   const firstRaceTime = earliestRace?.raceTime || raceTime;
-  return new Date(firstRaceTime);
+  const cutoff = new Date(firstRaceTime);
+  cutoff.setMinutes(cutoff.getMinutes() - 30);
+  return cutoff;
 }
 
 /**
@@ -75,7 +77,9 @@ export async function getVenueCutoffs(roundId: string): Promise<Map<string, Date
   const cutoffs = new Map<string, Date>();
   for (const race of races) {
     if (!cutoffs.has(race.venue)) {
-      cutoffs.set(race.venue, new Date(race.raceTime));
+      const cutoff = new Date(race.raceTime);
+      cutoff.setMinutes(cutoff.getMinutes() - 30);
+      cutoffs.set(race.venue, cutoff);
     }
   }
 
@@ -126,6 +130,7 @@ export async function getNextCutoff(): Promise<{
 
     for (const venue of Array.from(venueFirstRace.keys())) {
       const cutoff = new Date(venueFirstRace.get(venue)!);
+      cutoff.setMinutes(cutoff.getMinutes() - 30);
 
       if (cutoff > now) {
         if (!nearest || cutoff < nearest.cutoff) {

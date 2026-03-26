@@ -82,6 +82,7 @@ export default async function RaceDetailPage({
           {new Date(race.raceTime).toLocaleTimeString("en-AU", {
             hour: "numeric",
             minute: "2-digit",
+            timeZone: "Australia/Sydney",
           })}
         </p>
         <div className="flex gap-2 mt-2">

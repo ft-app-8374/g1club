@@ -173,6 +173,7 @@ export default async function CalendarPage() {
                               {raceTime.toLocaleTimeString("en-AU", {
                                 hour: "numeric",
                                 minute: "2-digit",
+                                timeZone: "Australia/Sydney",
                               })}
                             </span>
                             {race.status === "final" && (

@@ -38,6 +38,7 @@ export async function POST(req: Request) {
     }
 
     let settledCount = 0;
+    const skipped: Array<{ race: string; reason: string }> = [];
 
     for (const race of races) {
       // Check WIN market
@@ -47,7 +48,14 @@ export async function POST(req: Request) {
       });
 
       const winBook = winBooks[0];
-      if (!winBook || winBook.status !== "CLOSED") continue;
+      if (!winBook) {
+        skipped.push({ race: race.name, reason: `No market book for ${race.betfairMarketId}` });
+        continue;
+      }
+      if (winBook.status !== "CLOSED") {
+        skipped.push({ race: race.name, reason: `Market status: ${winBook.status} (waiting for CLOSED)` });
+        continue;
+      }
 
       // Get PLACE market BSPs if available
       let placeBook = null;
@@ -131,6 +139,7 @@ export async function POST(req: Request) {
       message: "Settlement check complete",
       racesChecked: races.length,
       settled: settledCount,
+      skipped,
     });
   } catch (error) {
     console.error("Settle race error:", error);

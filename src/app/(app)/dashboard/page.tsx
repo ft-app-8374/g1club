@@ -172,6 +172,7 @@ export default async function DashboardPage() {
                     {new Date(bet.race.raceTime).toLocaleTimeString("en-AU", {
                       hour: "numeric",
                       minute: "2-digit",
+                      timeZone: "Australia/Sydney",
                     })}
                   </span>
                 </div>
