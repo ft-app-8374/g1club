@@ -269,7 +269,7 @@ async function main() {
       startDate: new Date("2026-08-22"),
       endDate: new Date("2026-11-14"),
       entryFee: 55.0,
-      status: "upcoming",
+      status: "draft",
     },
   });
 
@@ -365,6 +365,142 @@ async function main() {
 
     console.log("  Sample race: Winx Stakes (Round 1) with 10 runners");
   }
+
+  // ── Test Carnival: April 2026 Testing ──
+  const testCarnival = await prisma.carnival.upsert({
+    where: { year: 2025 },
+    update: { name: "April 2026 Testing", startDate: new Date("2026-04-04"), endDate: new Date("2026-04-25"), status: "active" },
+    create: {
+      name: "April 2026 Testing",
+      year: 2025, // Use 2025 slot since 2026 is taken by Spring
+      startDate: new Date("2026-04-04"),
+      endDate: new Date("2026-04-25"),
+      entryFee: 0,
+      status: "active",
+    },
+  });
+
+  const testRounds = [
+    { number: 1, name: "Test Round 1 — Randwick Saturday", date: "2026-04-04" },
+    { number: 2, name: "Test Round 2 — Caulfield Saturday", date: "2026-04-11" },
+    { number: 3, name: "Test Round 3 — Rosehill Saturday", date: "2026-04-18" },
+    { number: 4, name: "Test Round 4 — Flemington Saturday", date: "2026-04-25" },
+  ];
+
+  for (const r of testRounds) {
+    const raceDate = new Date(r.date);
+    const cutoffAt = new Date(raceDate);
+    cutoffAt.setHours(11, 0, 0, 0); // 11am AEST cutoff
+
+    await prisma.round.upsert({
+      where: { carnivalId_number: { carnivalId: testCarnival.id, number: r.number } },
+      update: {},
+      create: {
+        carnivalId: testCarnival.id,
+        number: r.number,
+        name: r.name,
+        raceDate,
+        cutoffAt,
+      },
+    });
+  }
+
+  // Test races: 3 per Saturday, races 5-10, Sydney/Melbourne tracks
+  const testRaces: { roundNum: number; race1StartTime: string; races: { id: string; name: string; venue: string; distance: number; raceNum: number; time: string; grade: string; raceType: string; prize: string }[] }[] = [
+    {
+      roundNum: 1, // Apr 4 — Randwick
+      race1StartTime: "2026-04-04T01:00:00Z",
+      races: [
+        { id: "test-apr4-r6", name: "Doncaster Prelude", venue: "Randwick", distance: 1500, raceNum: 6, time: "2026-04-04T03:10:00Z", grade: "G2", raceType: "Hcp", prize: "$500,000" },
+        { id: "test-apr4-r7", name: "TJ Smith Stakes", venue: "Randwick", distance: 1200, raceNum: 7, time: "2026-04-04T03:50:00Z", grade: "G1", raceType: "WFA", prize: "$1,500,000" },
+        { id: "test-apr4-r8", name: "ATC Sires Produce", venue: "Randwick", distance: 1400, raceNum: 8, time: "2026-04-04T04:30:00Z", grade: "G1", raceType: "SW", prize: "$1,000,000" },
+      ],
+    },
+    {
+      roundNum: 2, // Apr 11 — Caulfield
+      race1StartTime: "2026-04-11T01:00:00Z",
+      races: [
+        { id: "test-apr11-r5", name: "Caulfield Autumn Classic", venue: "Caulfield", distance: 1800, raceNum: 5, time: "2026-04-11T02:50:00Z", grade: "G2", raceType: "SW", prize: "$400,000" },
+        { id: "test-apr11-r7", name: "Futurity Stakes", venue: "Caulfield", distance: 1400, raceNum: 7, time: "2026-04-11T03:50:00Z", grade: "G1", raceType: "WFA", prize: "$1,000,000" },
+        { id: "test-apr11-r9", name: "Caulfield Autumn Sprint", venue: "Caulfield", distance: 1100, raceNum: 9, time: "2026-04-11T04:50:00Z", grade: "G2", raceType: "Hcp", prize: "$500,000" },
+      ],
+    },
+    {
+      roundNum: 3, // Apr 18 — Rosehill
+      race1StartTime: "2026-04-18T01:00:00Z",
+      races: [
+        { id: "test-apr18-r6", name: "Rosehill Guineas", venue: "Rosehill", distance: 2000, raceNum: 6, time: "2026-04-18T03:10:00Z", grade: "G1", raceType: "SW", prize: "$1,000,000" },
+        { id: "test-apr18-r8", name: "Golden Slipper", venue: "Rosehill", distance: 1200, raceNum: 8, time: "2026-04-18T04:15:00Z", grade: "G1", raceType: "SW", prize: "$5,000,000" },
+        { id: "test-apr18-r10", name: "George Ryder Stakes", venue: "Rosehill", distance: 1500, raceNum: 10, time: "2026-04-18T05:00:00Z", grade: "G1", raceType: "WFA", prize: "$1,500,000" },
+      ],
+    },
+    {
+      roundNum: 4, // Apr 25 — Flemington
+      race1StartTime: "2026-04-25T01:00:00Z",
+      races: [
+        { id: "test-apr25-r5", name: "Anzac Day Stakes", venue: "Flemington", distance: 1600, raceNum: 5, time: "2026-04-25T02:50:00Z", grade: "G2", raceType: "WFA", prize: "$500,000" },
+        { id: "test-apr25-r7", name: "Australian Cup", venue: "Flemington", distance: 2000, raceNum: 7, time: "2026-04-25T03:50:00Z", grade: "G1", raceType: "WFA", prize: "$1,500,000" },
+        { id: "test-apr25-r9", name: "Flemington Sprint", venue: "Flemington", distance: 1200, raceNum: 9, time: "2026-04-25T04:50:00Z", grade: "G1", raceType: "Open Hcp", prize: "$750,000" },
+      ],
+    },
+  ];
+
+  for (const tr of testRaces) {
+    const round = await prisma.round.findFirst({
+      where: { carnivalId: testCarnival.id, number: tr.roundNum },
+    });
+    if (!round) continue;
+
+    for (const race of tr.races) {
+      const created = await prisma.race.upsert({
+        where: { id: race.id },
+        update: {},
+        create: {
+          id: race.id,
+          roundId: round.id,
+          name: race.name,
+          venue: race.venue,
+          distance: race.distance,
+          raceTime: new Date(race.time),
+          race1StartTime: new Date(tr.race1StartTime),
+          raceNumber: race.raceNum,
+          grade: race.grade,
+          raceType: race.raceType,
+          prizePool: race.prize,
+          status: "upcoming",
+        },
+      });
+
+      // Add 8 test runners per race
+      const runners = [
+        { name: "ANAMOE", barrier: 1, jockey: "J McDonald", trainer: "C Waller", weight: 58.5 },
+        { name: "GOLDEN MILE", barrier: 2, jockey: "D Lane", trainer: "A & S Freedman", weight: 57.0 },
+        { name: "SHINZO", barrier: 3, jockey: "T Marquand", trainer: "P & P Snowden", weight: 56.5 },
+        { name: "MILITARIZE", barrier: 4, jockey: "C Williams", trainer: "C Maher & D Eustace", weight: 56.0 },
+        { name: "JUST FINE", barrier: 5, jockey: "W Egan", trainer: "C Waller", weight: 55.5 },
+        { name: "NORTH STAR", barrier: 6, jockey: "K McEvoy", trainer: "J Cummings", weight: 55.0 },
+        { name: "RAPID FIRE", barrier: 7, jockey: "J Bowman", trainer: "G Waterhouse & A Bott", weight: 54.5 },
+        { name: "HARBOUR LIGHTS", barrier: 8, jockey: "L Currie", trainer: "L & T Corstens", weight: 54.0 },
+      ];
+
+      for (const runner of runners) {
+        await prisma.runner.upsert({
+          where: { raceId_name: { raceId: created.id, name: runner.name } },
+          update: {},
+          create: {
+            raceId: created.id,
+            name: runner.name,
+            barrier: runner.barrier,
+            jockey: runner.jockey,
+            trainer: runner.trainer,
+            weight: runner.weight,
+          },
+        });
+      }
+    }
+  }
+
+  console.log("  Test Carnival: 4 rounds (Apr 4-25), 12 races, 8 runners each");
 
   console.log("\nSeed complete!");
 }

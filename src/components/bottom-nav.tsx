@@ -7,7 +7,8 @@ import { useState, useEffect } from "react";
 const menuItems = [
   { href: "/dashboard", label: "Home", icon: "🏠" },
   { href: "/calendar", label: "Calendar", icon: "📅" },
-  { href: "/races", label: "Races", icon: "🏇" },
+  { href: "/races", label: "Tips", icon: "🏇" },
+  { href: "/mounting-yard", label: "Mounting Yard", icon: "🐎" },
   { href: "/leaderboard", label: "Leaderboard", icon: "🏆" },
   { href: "/honour-roll", label: "Honour Roll", icon: "📜" },
 ];
