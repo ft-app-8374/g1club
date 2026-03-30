@@ -14,7 +14,7 @@ async function main() {
 
   const merc = await prisma.user.upsert({
     where: { username: "Merc" },
-    update: {},
+    update: { email: "clayton.mccloud@hotmail.com", role: "admin" },
     create: {
       username: "Merc",
       email: "clayton.mccloud@hotmail.com",
@@ -26,7 +26,7 @@ async function main() {
 
   const mills = await prisma.user.upsert({
     where: { username: "Mills" },
-    update: { role: "member" },
+    update: { role: "member", email: "millermanhill@gmail.com" },
     create: {
       username: "Mills",
       email: "millermanhill@gmail.com",
@@ -53,7 +53,7 @@ async function main() {
   const natoHash = await bcrypt.hash("nato2026", 10);
   await prisma.user.upsert({
     where: { username: "Snake" },
-    update: { role: "admin" },
+    update: { role: "admin", email: "jmennen@outlook.com" },
     create: {
       username: "Snake",
       email: "jmennen@outlook.com",
@@ -65,7 +65,7 @@ async function main() {
 
   await prisma.user.upsert({
     where: { username: "Nato" },
-    update: {},
+    update: { email: "natomeulenberg@gmail.com" },
     create: {
       username: "Nato",
       email: "natomeulenberg@gmail.com",
