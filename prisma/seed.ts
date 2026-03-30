@@ -262,7 +262,7 @@ async function main() {
   // 2026 Carnival skeleton
   const carnival = await prisma.carnival.upsert({
     where: { year: 2026 },
-    update: {},
+    update: { status: "draft" },
     create: {
       name: "2026 Spring Carnival",
       year: 2026,
