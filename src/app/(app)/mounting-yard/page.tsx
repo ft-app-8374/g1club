@@ -173,131 +173,91 @@ export default async function MountingYardPage() {
         <p className="text-sm text-slate-500 mt-0.5">See what the field is playing</p>
       </div>
 
-      {/* Round header(s) */}
-      {lockedRounds.map((round) => (
-        <div key={round.id} className="flex items-center gap-2">
-          <h3 className="text-sm text-gold font-semibold uppercase tracking-wide">
-            {new Date(round.raceDate).toLocaleDateString("en-AU", {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-            })}{" "}
-            &middot; Round {round.number}
-          </h3>
-          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
-            {lockedRaces.length} {lockedRaces.length === 1 ? "race" : "races"}
-          </span>
-        </div>
-      ))}
-
-      {/* Each user's tips, ordered by leaderboard rank */}
-      {leaderboard.map((entry, i) => {
-        const isMe = entry.userId === currentUserId;
-        const userTips = tipsByUser.get(entry.userId);
-
-        return (
-          <div
-            key={entry.userId}
-            className={`bg-white rounded-card border border-surface-muted shadow-card overflow-hidden ${
-              isMe ? "ring-2 ring-gold/30" : ""
-            }`}
-          >
-            {/* User header */}
-            <div
-              className={`flex items-center justify-between px-4 py-3 border-b border-surface-muted ${
-                isMe ? "bg-gold-accent" : "bg-surface"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-lg w-8 text-center">
-                  {i < 3
-                    ? medals[i]
-                    : i === leaderboard.length - 1
-                      ? "\u{1F944}"
-                      : `${i + 1}`}
-                </span>
-                <span
-                  className={`font-semibold ${isMe ? "text-gold" : "text-slate-900"}`}
-                >
-                  {entry.username}
-                </span>
-              </div>
-              <span
-                className={`font-bold text-sm ${
-                  entry.profit >= 0 ? "text-profit" : "text-loss"
-                }`}
-              >
-                {entry.profit >= 0 ? "+" : ""}${entry.profit.toFixed(0)}
-              </span>
-            </div>
-
-            {/* Tips for each race */}
-            <div className="divide-y divide-surface-muted">
-              {lockedRaces.map((race) => {
-                const tip = userTips?.get(race.id);
+      {/* Table: races as columns, punters as rows */}
+      <div className="bg-white rounded-card border border-surface-muted shadow-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px]">
+            <thead>
+              <tr className="bg-surface border-b border-surface-muted">
+                <th className="text-left px-3 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-wide sticky left-0 bg-surface z-10 min-w-[120px]">
+                  Punter
+                </th>
+                {lockedRaces.map((race) => (
+                  <th key={race.id} className="text-left px-3 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-wide min-w-[150px]">
+                    <div>R{race.raceNumber} {race.name}</div>
+                    <div className="font-normal text-slate-400 normal-case">{race.venue} · {race.distance}m</div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-surface-muted">
+              {leaderboard.map((entry, i) => {
+                const isMe = entry.userId === currentUserId;
+                const userTips = tipsByUser.get(entry.userId);
 
                 return (
-                  <div key={race.id} className="px-4 py-3">
-                    <p className="text-xs text-slate-400 mb-1.5">
-                      {race.venue} R{race.raceNumber} &mdash; {race.name}
-                    </p>
-
-                    {!tip || tip.tipLines.length === 0 ? (
-                      <p className="text-sm text-loss font-medium">No tip</p>
-                    ) : (
-                      <div className="space-y-1">
-                        {tip.tipLines.map((line) => {
-                          const displayRunner =
-                            line.isBackupActive && line.effectiveRunner
-                              ? line.effectiveRunner
-                              : line.runner;
-                          const betLabel =
-                            line.betType === "win" ? "W" : "P";
-
-                          return (
-                            <div key={line.id} className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-slate-900">
-                                {displayRunner.name}
-                              </span>
-                              <span
-                                className={`text-xs font-bold px-1.5 py-0.5 rounded ${
-                                  line.betType === "win"
-                                    ? "bg-gold-accent text-gold"
-                                    : "bg-slate-100 text-slate-600"
-                                }`}
-                              >
-                                {betLabel}
-                              </span>
-                              <span className="text-xs text-slate-500">
-                                ${line.amount.toFixed(0)}
-                              </span>
-                              {line.isBackupActive && line.effectiveRunner && (
-                                <span className="text-[10px] text-slate-400">
-                                  (was {line.runner.name})
-                                </span>
-                              )}
-                              {line.backupRunner && !line.isBackupActive && (
-                                <span className="text-[10px] text-slate-400">
-                                  B/U: {line.backupRunner.name}
-                                </span>
-                              )}
-                              {line.runner.isScratched && !line.isBackupActive && (
-                                <span className="text-[10px] text-loss">
-                                  SCR
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
+                  <tr key={entry.userId} className={isMe ? "bg-gold-accent/50" : ""}>
+                    <td className={`px-3 py-2.5 sticky left-0 z-10 ${isMe ? "bg-gold-accent" : "bg-white"}`}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm w-6 text-center">
+                          {i < 3
+                            ? medals[i]
+                            : i === leaderboard.length - 1
+                              ? "\u{1F944}"
+                              : `${i + 1}`}
+                        </span>
+                        <div>
+                          <span className={`text-sm font-semibold ${isMe ? "text-gold" : "text-slate-900"}`}>
+                            {entry.username}
+                          </span>
+                          <div className={`text-[10px] font-bold ${entry.profit >= 0 ? "text-profit" : "text-loss"}`}>
+                            {entry.profit >= 0 ? "+" : ""}${entry.profit.toFixed(0)}
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </div>
+                    </td>
+                    {lockedRaces.map((race) => {
+                      const tip = userTips?.get(race.id);
+
+                      return (
+                        <td key={race.id} className="px-3 py-2.5 align-top">
+                          {!tip || tip.tipLines.length === 0 ? (
+                            <span className="text-xs text-loss">No tip</span>
+                          ) : (
+                            <div className="space-y-0.5">
+                              {tip.tipLines.map((line) => {
+                                const displayRunner =
+                                  line.isBackupActive && line.effectiveRunner
+                                    ? line.effectiveRunner
+                                    : line.runner;
+
+                                return (
+                                  <div key={line.id} className="text-xs">
+                                    <span className="font-semibold text-slate-900">{displayRunner.name}</span>
+                                    {" "}
+                                    <span className={`font-bold ${line.betType === "win" ? "text-gold" : "text-slate-400"}`}>
+                                      {line.betType === "win" ? "W" : "P"}
+                                    </span>
+                                    {" "}
+                                    <span className="text-slate-500">${line.amount.toFixed(0)}</span>
+                                    {line.runner.isScratched && !line.isBackupActive && (
+                                      <span className="text-loss ml-1">SCR</span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
                 );
               })}
-            </div>
-          </div>
-        );
-      })}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* Upcoming cutoff notice */}
       {nextCutoff && (
