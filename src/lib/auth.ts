@@ -49,10 +49,22 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
+      // Refresh email from DB on every session check (in case it was updated)
+      let email = token.email as string;
+      try {
+        const { prisma } = await import("@/lib/prisma");
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { email: true },
+        });
+        if (dbUser) email = dbUser.email;
+      } catch {
+        // Fall back to token email if DB unavailable
+      }
       session.user = {
         id: token.id as string,
         username: token.username as string,
-        email: token.email as string,
+        email,
         role: token.role as string,
         isFinancial: (token.isFinancial as boolean) ?? false,
       };

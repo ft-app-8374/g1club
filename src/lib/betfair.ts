@@ -19,14 +19,28 @@ export async function betfairLogin(
     throw new Error("BETFAIR_USERNAME and BETFAIR_PASSWORD must be set");
   }
 
+  const body = `username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
   const res = await fetch(BETFAIR_LOGIN, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
+      "Accept": "application/json",
       "X-Application": getAppKey(),
     },
-    body: `username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`,
+    body,
+    redirect: "manual",
   });
+
+  // Betfair returns 302 redirect on auth failure instead of JSON error
+  if (res.status === 302) {
+    const location = res.headers.get("location") || "";
+    const errorMatch = location.match(/errorCode=(\w+)/);
+    throw new Error(`Betfair login failed: ${errorMatch?.[1] || "redirect (possible auth failure)"}`);
+  }
+
+  if (!res.ok) {
+    throw new Error(`Betfair login HTTP error: ${res.status}`);
+  }
 
   const data = await res.json();
   if (data.status !== "SUCCESS") {
