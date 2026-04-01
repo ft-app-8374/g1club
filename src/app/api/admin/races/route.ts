@@ -88,6 +88,23 @@ export async function PATCH(req: Request) {
     }
     if (updates.numPlacePositions) data.numPlacePositions = parseInt(updates.numPlacePositions);
 
+    // Handle race1StartTime — apply to ALL races at the same venue on the same day
+    if ("race1StartTime" in updates) {
+      const r1Time = updates.race1StartTime ? new Date(updates.race1StartTime) : null;
+
+      // Update all races at this venue within the same round (same day)
+      await prisma.race.updateMany({
+        where: { roundId: race.roundId, venue: race.venue },
+        data: { race1StartTime: r1Time },
+      });
+
+      // If there are no other fields to update, return early
+      if (Object.keys(data).length === 0) {
+        const updated = await prisma.race.findUnique({ where: { id: raceId } });
+        return NextResponse.json({ race: updated });
+      }
+    }
+
     const updated = await prisma.race.update({
       where: { id: raceId },
       data,

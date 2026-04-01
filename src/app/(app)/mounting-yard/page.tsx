@@ -100,9 +100,9 @@ export default async function MountingYardPage() {
     const cutoffs = await getVenueCutoffs(round.id);
     let anyLocked = false;
     for (const [venue, cutoffTime] of Array.from(cutoffs.entries())) {
-      if (cutoffTime <= now) {
+      if (cutoffTime && cutoffTime <= now) {
         anyLocked = true;
-      } else {
+      } else if (cutoffTime) {
         // Track the soonest upcoming cutoff
         if (!nextCutoff || cutoffTime < nextCutoff.time) {
           nextCutoff = { venue, time: cutoffTime };

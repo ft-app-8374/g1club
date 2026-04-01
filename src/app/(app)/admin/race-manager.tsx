@@ -16,6 +16,7 @@ interface Round {
     grade: string;
     status: string;
     raceTime: string;
+    race1StartTime?: string | null;
     raceNumber: number;
     runners: Array<{ id: string; name: string; isScratched: boolean }>;
   }>;
@@ -26,6 +27,8 @@ export function RaceManager({ rounds }: { rounds: Round[] }) {
   const [expandedRound, setExpandedRound] = useState<string | null>(null);
   const [addingRace, setAddingRace] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [lockoutInputs, setLockoutInputs] = useState<Record<string, string>>({});
+  const [lockoutLoading, setLockoutLoading] = useState<string | null>(null);
 
   // New race form state
   const [newRace, setNewRace] = useState({
@@ -83,6 +86,41 @@ export function RaceManager({ rounds }: { rounds: Round[] }) {
       body: JSON.stringify({ runnerId, isScratched }),
     });
     router.refresh();
+  }
+
+  async function handleSetLockout(raceId: string) {
+    const value = lockoutInputs[raceId];
+    if (!value) return;
+    setLockoutLoading(raceId);
+    try {
+      await fetch("/api/admin/races", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ raceId, race1StartTime: value }),
+      });
+      router.refresh();
+    } catch { /* ignore */ }
+    setLockoutLoading(null);
+  }
+
+  async function handleClearLockout(raceId: string) {
+    setLockoutLoading(raceId);
+    try {
+      await fetch("/api/admin/races", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ raceId, race1StartTime: null }),
+      });
+      router.refresh();
+    } catch { /* ignore */ }
+    setLockoutLoading(null);
+  }
+
+  // Format an ISO datetime to a datetime-local input value (YYYY-MM-DDTHH:MM)
+  function toLocalInput(iso: string): string {
+    const d = new Date(iso);
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
   const inputClasses =
@@ -166,6 +204,46 @@ export function RaceManager({ rounds }: { rounds: Round[] }) {
                   {race.runners.length === 0 && (
                     <p className="text-xs text-slate-400 mt-1">No runners yet</p>
                   )}
+
+                  {/* Lockout Time */}
+                  <div className="mt-2 pt-2 border-t border-surface-muted/50">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {race.race1StartTime ? (
+                        <span className="text-xs text-green-600 flex items-center gap-1">
+                          <span className="inline-block w-3 h-3 rounded-full bg-green-500 text-white text-[8px] leading-3 text-center font-bold">&#10003;</span>
+                          Lockout: {new Date(race.race1StartTime).toLocaleString("en-AU", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: "Australia/Sydney" })}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-orange-500 flex items-center gap-1">
+                          <span className="inline-block w-3 h-3 rounded-full bg-orange-400 text-white text-[8px] leading-3 text-center font-bold">!</span>
+                          Lockout not set
+                        </span>
+                      )}
+                      <input
+                        type="datetime-local"
+                        value={lockoutInputs[race.id] ?? (race.race1StartTime ? toLocalInput(race.race1StartTime) : "")}
+                        onChange={(e) => setLockoutInputs({ ...lockoutInputs, [race.id]: e.target.value })}
+                        className="text-xs bg-white border border-surface-muted rounded px-2 py-1 text-slate-700 focus:outline-none focus:border-gold"
+                      />
+                      <button
+                        onClick={() => handleSetLockout(race.id)}
+                        disabled={lockoutLoading === race.id || !lockoutInputs[race.id]}
+                        className="text-xs bg-gold hover:bg-gold-dark text-white font-bold px-2 py-1 rounded transition disabled:opacity-50"
+                      >
+                        {lockoutLoading === race.id ? "..." : "Set Lockout"}
+                      </button>
+                      {race.race1StartTime && (
+                        <button
+                          onClick={() => handleClearLockout(race.id)}
+                          disabled={lockoutLoading === race.id}
+                          className="text-xs text-loss hover:text-red-700"
+                          title="Clear lockout time"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ))}
 

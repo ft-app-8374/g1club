@@ -74,10 +74,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check per-venue cutoff (30 min before first race at this track)
+    // Check per-venue cutoff (Race 1 jump time at this track)
     const now = new Date();
-    const cutoff = await getCutoffForVenueOnDay(race.venue, race.raceTime, race.roundId);
-    if (now >= cutoff) {
+    const cutoff = await getCutoffForVenueOnDay(race.venue, race.roundId);
+    if (cutoff && now >= cutoff) {
       return NextResponse.json(
         { error: "Tips are locked — cutoff has passed for this venue" },
         { status: 400 }
@@ -246,8 +246,8 @@ export async function DELETE(req: Request) {
     );
   }
 
-  const cutoff = await getCutoffForVenueOnDay(race.venue, race.raceTime, race.roundId);
-  if (new Date() >= cutoff) {
+  const cutoff = await getCutoffForVenueOnDay(race.venue, race.roundId);
+  if (cutoff && new Date() >= cutoff) {
     return NextResponse.json(
       { error: "Tips are locked — cutoff has passed for this venue" },
       { status: 400 }

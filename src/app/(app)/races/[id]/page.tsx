@@ -37,8 +37,8 @@ export default async function RaceDetailPage({
   });
 
   const now = new Date();
-  const venueCutoff = await getCutoffForVenueOnDay(race.venue, race.raceTime, race.roundId);
-  const cutoffPassed = now >= venueCutoff;
+  const venueCutoff = await getCutoffForVenueOnDay(race.venue, race.roundId);
+  const cutoffPassed = venueCutoff ? now >= venueCutoff : false;
   const isSettled = race.status === "final";
 
   // All tips (visible after cutoff)
@@ -106,19 +106,25 @@ export default async function RaceDetailPage({
       {!cutoffPassed && (
         <div className="bg-gold-accent border border-gold/30 rounded-card p-4">
           <p className="text-sm text-gold font-medium">
-            Tips close ({race.venue}):{" "}
-            {venueCutoff.toLocaleString("en-AU", {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-              timeZone: "Australia/Sydney",
-            })}
+            {venueCutoff ? (
+              <>Tips close ({race.venue}):{" "}
+              {venueCutoff.toLocaleString("en-AU", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                timeZone: "Australia/Sydney",
+            })}</>
+            ) : (
+              <>Lockout time TBC — tips are open</>
+            )}
           </p>
-          <p className="text-xs text-slate-500 mt-1">
-            First race at {race.venue}
-          </p>
+          {venueCutoff && (
+            <p className="text-xs text-slate-500 mt-1">
+              First race at {race.venue}
+            </p>
+          )}
         </div>
       )}
 
@@ -211,7 +217,7 @@ export default async function RaceDetailPage({
       {!cutoffPassed && activeRunners.length > 0 && (
         <TipForm
           raceId={race.id}
-          cutoffAt={venueCutoff.toISOString()}
+          cutoffAt={venueCutoff?.toISOString() || ""}
           runners={activeRunners.map((r) => ({
             id: r.id,
             name: r.name,

@@ -69,6 +69,7 @@ export default async function AdminPage() {
       grade: race.grade,
       status: race.status,
       raceTime: race.raceTime.toISOString(),
+      race1StartTime: race.race1StartTime?.toISOString() || null,
       raceNumber: race.raceNumber,
       runners: race.runners.map((runner) => ({
         id: runner.id,
@@ -138,8 +139,8 @@ export default async function AdminPage() {
   // Compute cutoff status for each race
   const raceCutoffMap = new Map<string, boolean>();
   for (const race of allRacesWithRound) {
-    const cutoff = await getCutoffForVenueOnDay(race.venue, race.raceTime, race.roundId);
-    raceCutoffMap.set(race.id, now >= cutoff);
+    const cutoff = await getCutoffForVenueOnDay(race.venue, race.roundId);
+    raceCutoffMap.set(race.id, cutoff ? now >= cutoff : false);
   }
 
   // Query all tips for races in this carnival
