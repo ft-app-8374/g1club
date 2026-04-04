@@ -30,11 +30,13 @@ export function TipForm({
   cutoffAt,
   runners,
   existingTip,
+  nextRaceId,
 }: {
   raceId: string;
   cutoffAt: string;
   runners: Runner[];
   existingTip?: { lines: ApiTipLine[] };
+  nextRaceId?: string | null;
 }) {
   const router = useRouter();
 
@@ -580,6 +582,16 @@ export function TipForm({
           <p className="text-center text-sm text-profit font-medium">
             Tips saved! You can still edit and resubmit before cutoff.
           </p>
+        )}
+
+        {success && nextRaceId && (
+          <button
+            type="button"
+            onClick={() => router.push("/races/" + nextRaceId)}
+            className="w-full bg-gold hover:bg-gold-dark text-white font-bold py-3 rounded-lg transition"
+          >
+            Tip Next Race &rarr;
+          </button>
         )}
       </form>
     </div>

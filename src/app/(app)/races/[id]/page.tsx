@@ -66,6 +66,29 @@ export default async function RaceDetailPage({
 
   const activeRunners = race.runners.filter((r) => !r.isScratched);
 
+  // Find the next untipped race in the same round (chronologically after this one)
+  let nextRaceId: string | null = null;
+  if (!cutoffPassed) {
+    const tippedRaceIds = (
+      await prisma.tip.findMany({
+        where: { userId: session.user.id, race: { roundId: race.roundId } },
+        select: { raceId: true },
+      })
+    ).map((t) => t.raceId);
+
+    const nextRace = await prisma.race.findFirst({
+      where: {
+        roundId: race.roundId,
+        status: { in: ["upcoming", "open"] },
+        raceTime: { gt: race.raceTime },
+        id: { notIn: [...tippedRaceIds, race.id] },
+      },
+      orderBy: { raceTime: "asc" },
+      select: { id: true },
+    });
+    nextRaceId = nextRace?.id ?? null;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -236,6 +259,7 @@ export default async function RaceDetailPage({
                 }
               : undefined
           }
+          nextRaceId={nextRaceId}
         />
       )}
 

@@ -55,6 +55,27 @@ export function MemberTips({ members }: { members: Member[] }) {
   const [editLines, setEditLines] = useState<EditLine[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [financialOverrides, setFinancialOverrides] = useState<Record<string, boolean>>({});
+  const [togglingFinancial, setTogglingFinancial] = useState<string | null>(null);
+
+  async function toggleFinancial(userId: string, currentValue: boolean) {
+    const newValue = !currentValue;
+    setFinancialOverrides((prev) => ({ ...prev, [userId]: newValue }));
+    setTogglingFinancial(userId);
+    try {
+      const res = await fetch("/api/admin/members", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, isFinancial: newValue }),
+      });
+      if (!res.ok) {
+        setFinancialOverrides((prev) => ({ ...prev, [userId]: currentValue }));
+      }
+    } catch {
+      setFinancialOverrides((prev) => ({ ...prev, [userId]: currentValue }));
+    }
+    setTogglingFinancial(null);
+  }
 
   function startEdit(tip: UserTip, userId: string) {
     if (tip.tipLines.length > 0) {
@@ -178,15 +199,21 @@ export function MemberTips({ members }: { members: Member[] }) {
                   Admin
                 </span>
               )}
-              <span
-                className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-                  member.isFinancial
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const current = financialOverrides[member.id] ?? member.isFinancial;
+                  toggleFinancial(member.id, current);
+                }}
+                disabled={togglingFinancial === member.id}
+                className={`text-xs px-1.5 py-0.5 rounded font-medium inline-flex items-center gap-1 transition hover:opacity-80 disabled:opacity-50 ${
+                  (financialOverrides[member.id] ?? member.isFinancial)
                     ? "bg-green-50 text-profit"
                     : "bg-red-50 text-loss"
                 }`}
               >
-                {member.isFinancial ? "Paid" : "Unpaid"}
-              </span>
+                {(financialOverrides[member.id] ?? member.isFinancial) ? "Paid ✕" : "Unpaid ✓"}
+              </button>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-400">
