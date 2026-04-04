@@ -89,50 +89,42 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      {/* Full-width hero with racing background */}
-      <div className="relative overflow-hidden rounded-card" style={{
-        background: "linear-gradient(135deg, #1a1f2e 0%, #0f1420 50%, #1a1f2e 100%)",
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='200'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='600' y2='0'%3E%3Cstop offset='0' stop-color='%23d4a843' stop-opacity='0.03'/%3E%3Cstop offset='0.5' stop-color='%23d4a843' stop-opacity='0.08'/%3E%3Cstop offset='1' stop-color='%23d4a843' stop-opacity='0.03'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0 180 Q150 120 300 140 T600 100' fill='none' stroke='url(%23g)' stroke-width='2'/%3E%3Cpath d='M0 160 Q150 100 300 120 T600 80' fill='none' stroke='url(%23g)' stroke-width='1.5'/%3E%3Cpath d='M0 200 Q150 140 300 160 T600 120' fill='none' stroke='url(%23g)' stroke-width='1'/%3E%3C/svg%3E")`,
-        backgroundPosition: "bottom",
-        backgroundRepeat: "repeat-x",
-      }}>
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-gold to-transparent" />
-        <div className="p-5 pb-4">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">
-                Welcome back, <span className="text-gold">{user.username}</span>
-              </h1>
-              {carnival && (
-                <p className="text-xs text-slate-500 mt-0.5">{carnival.name}</p>
-              )}
-            </div>
-            {myRank && (
-              <div className="text-right">
-                <span className="text-2xl font-black text-gold">#{myRank}</span>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest">
-                  of {sorted.length}
-                </p>
-              </div>
+      {/* Hero Section */}
+      <div className="bg-white rounded-card p-5 border border-surface-muted shadow-card">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+              Welcome back, <span className="text-gold">{user.username}</span>
+            </h1>
+            {carnival && (
+              <p className="text-xs text-slate-500 mt-0.5">{carnival.name}</p>
             )}
           </div>
-
-          {/* Stats row */}
-          <div className="flex gap-3">
-            <div className="flex-1 bg-white/[0.06] rounded-lg px-3 py-2.5 text-center backdrop-blur-sm">
-              <p className={`text-lg font-bold ${totalPnL >= 0 ? "text-profit" : "text-loss"}`}>
-                {totalPnL >= 0 ? "+" : ""}${totalPnL.toFixed(0)}
+          {myRank && (
+            <div className="text-right">
+              <span className="text-2xl font-black text-gold">#{myRank}</span>
+              <p className="text-[10px] text-slate-400 uppercase tracking-widest">
+                of {sorted.length}
               </p>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider">P&amp;L</p>
             </div>
-            <div className="flex-1 bg-white/[0.06] rounded-lg px-3 py-2.5 text-center backdrop-blur-sm">
-              <p className="text-lg font-bold text-slate-200">{racesCompleted}</p>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider">Races</p>
-            </div>
-            <div className="flex-1 bg-white/[0.06] rounded-lg px-3 py-2.5 text-center backdrop-blur-sm">
-              <p className="text-lg font-bold text-gold">{untippedRaces.length}</p>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider">To Tip</p>
-            </div>
+          )}
+        </div>
+
+        {/* Stats row */}
+        <div className="flex gap-3">
+          <div className="flex-1 bg-surface rounded-lg px-3 py-2.5 text-center">
+            <p className={`text-lg font-bold ${totalPnL >= 0 ? "text-profit" : "text-loss"}`}>
+              {totalPnL >= 0 ? "+" : ""}${totalPnL.toFixed(0)}
+            </p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider">P&amp;L</p>
+          </div>
+          <div className="flex-1 bg-surface rounded-lg px-3 py-2.5 text-center">
+            <p className="text-lg font-bold text-slate-900">{racesCompleted}</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider">Races</p>
+          </div>
+          <div className="flex-1 bg-surface rounded-lg px-3 py-2.5 text-center">
+            <p className="text-lg font-bold text-gold">{untippedRaces.length}</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider">To Tip</p>
           </div>
         </div>
       </div>
