@@ -193,9 +193,10 @@ export function resultsEmail(
     html: wrapTemplate(`
       <h2 style="color: #e2e8f0; margin-top: 0;">Round Results — ${escapeHtml(roundName)}</h2>
       <div style="text-align: center; margin: 24px 0; padding: 20px; background: #111827; border-radius: 12px;">
-        <p style="color: #64748b; margin: 0 0 8px 0; font-size: 14px;">Your Total P&L</p>
+        <p style="color: #64748b; margin: 0 0 8px 0; font-size: 14px;">This Round</p>
         <p style="color: ${profitColor}; font-size: 36px; font-weight: bold; margin: 0;">${profitStr}</p>
-        <p style="color: #64748b; margin: 8px 0 0 0; font-size: 14px;">Rank: #${rank} of ${totalPlayers}</p>
+        <p style="color: #64748b; margin: 12px 0 0 0; font-size: 14px;">Season Standing</p>
+        <p style="color: #d4a843; font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">#${rank} of ${totalPlayers}</p>
       </div>
       ${raceBlocks}
       <div style="text-align: center; margin: 24px 0;">

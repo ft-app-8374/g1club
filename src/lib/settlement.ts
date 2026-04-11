@@ -339,14 +339,24 @@ async function sendRoundResultsIfComplete(roundId: string) {
     });
   }
 
-  // Calculate ranks by total round profit
+  // Get season totals for ranking (not just this round)
+  const seasonLedger = await prisma.ledger.groupBy({
+    by: ["userId"],
+    _sum: { profit: true },
+  });
+  const seasonProfitByUser = new Map(
+    seasonLedger.map((s) => [s.userId, Number(s._sum.profit || 0)])
+  );
+
+  // Build ranked list by SEASON total
   const ranked = Array.from(userRoundData.entries())
     .map(([userId, data]) => ({
       userId,
-      totalProfit: Math.round(data.totalProfit * 100) / 100,
+      roundProfit: Math.round(data.totalProfit * 100) / 100,
+      seasonProfit: Math.round((seasonProfitByUser.get(userId) || 0) * 100) / 100,
       races: data.races,
     }))
-    .sort((a, b) => b.totalProfit - a.totalProfit);
+    .sort((a, b) => b.seasonProfit - a.seasonProfit);
 
   // Get user details
   const users = await prisma.user.findMany({
@@ -364,7 +374,7 @@ async function sendRoundResultsIfComplete(roundId: string) {
     const email = resultsEmail(
       user.username,
       round.name,
-      entry.totalProfit,
+      entry.roundProfit,
       i + 1,
       ranked.length,
       entry.races
