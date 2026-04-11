@@ -81,6 +81,20 @@ export default async function AdminPage() {
   })) || [];
 
   // Races available for result entry + settled races with results
+  const allResults = await prisma.result.findMany({
+    where: {
+      race: { round: { carnivalId: carnival?.id } },
+    },
+    select: { raceId: true, runnerId: true, finishPosition: true, winDividend: true, placeDividend: true },
+    orderBy: { finishPosition: "asc" },
+  });
+  const existingResultsByRace = new Map<string, typeof allResults>();
+  for (const r of allResults) {
+    const arr = existingResultsByRace.get(r.raceId) || [];
+    arr.push(r);
+    existingResultsByRace.set(r.raceId, arr);
+  }
+
   const racesForResults = carnival?.rounds.flatMap((r) =>
     r.races.map((race) => ({
       id: race.id,
@@ -93,13 +107,18 @@ export default async function AdminPage() {
         barrier: runner.barrier,
         isScratched: runner.isScratched,
       })),
+      existingResults: (existingResultsByRace.get(race.id) || []).map((r) => ({
+        runnerId: r.runnerId,
+        finishPosition: r.finishPosition,
+        winDividend: r.winDividend ? Number(r.winDividend) : null,
+        placeDividend: r.placeDividend ? Number(r.placeDividend) : null,
+      })),
     }))
   ) || [];
 
-  // Fetch results for settled races
+  // Fetch results for all races (settled + pending)
   const settledResults = await prisma.result.findMany({
     where: {
-      race: { status: "final" },
       raceId: { in: racesForResults.map((r) => r.id) },
     },
     include: {

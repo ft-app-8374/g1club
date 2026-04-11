@@ -3,6 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+interface ExistingResult {
+  runnerId: string;
+  finishPosition: number;
+  winDividend: number | null;
+  placeDividend: number | null;
+}
+
 interface Race {
   id: string;
   name: string;
@@ -14,6 +21,7 @@ interface Race {
     barrier: number | null;
     isScratched: boolean;
   }>;
+  existingResults?: ExistingResult[];
 }
 
 export function ResultEntry({ races }: { races: Race[] }) {
@@ -30,8 +38,21 @@ export function ResultEntry({ races }: { races: Race[] }) {
 
   function handleSelectRace(raceId: string) {
     setSelectedRace(raceId);
-    setResults([]);
     setMessage("");
+    // Pre-populate with existing results if any
+    const selected = races.find((r) => r.id === raceId);
+    if (selected?.existingResults && selected.existingResults.length > 0) {
+      setResults(
+        selected.existingResults.map((r) => ({
+          runnerId: r.runnerId,
+          finishPosition: r.finishPosition,
+          winDividend: r.winDividend ? r.winDividend.toString() : "",
+          placeDividend: r.placeDividend ? r.placeDividend.toString() : "",
+        }))
+      );
+    } else {
+      setResults([]);
+    }
   }
 
   function addResult() {
@@ -91,9 +112,9 @@ export function ResultEntry({ races }: { races: Race[] }) {
     setLoading(false);
   }
 
-  // Only show races that can be settled (closed status, has runners)
+  // Show races that can be settled or re-settled
   const settlableRaces = races.filter(
-    (r) => (r.status === "closed" || r.status === "open") && r.runners.length > 0
+    (r) => ["closed", "open", "final"].includes(r.status) && r.runners.length > 0
   );
 
   const inputClasses =
