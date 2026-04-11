@@ -33,7 +33,7 @@ export async function POST(req: Request) {
         status: "open",
         raceTime: { gte: startOfDayUTC, lte: endOfDayUTC },
       },
-      select: { id: true, venue: true, raceTime: true, roundId: true },
+      select: { id: true, venue: true, raceTime: true, roundId: true, race1StartTime: true },
       orderBy: { raceTime: "asc" },
     });
 
@@ -41,14 +41,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "No open races today", locked: 0 });
     }
 
-    // Group by venue+round to find first race per venue
-    const venueFirstRace = new Map<string, Date>();
+    // Group by venue+round, use race1StartTime (R1 at venue) for cutoff
+    const venueCutoffTime = new Map<string, Date>();
     const venueRaceIds = new Map<string, string[]>();
 
     for (const race of todaysRaces) {
       const key = `${race.venue}:${race.roundId}`;
-      if (!venueFirstRace.has(key)) {
-        venueFirstRace.set(key, race.raceTime);
+      // Prefer race1StartTime (actual R1 at venue), fall back to earliest raceTime
+      if (!venueCutoffTime.has(key)) {
+        venueCutoffTime.set(key, race.race1StartTime || race.raceTime);
       }
       const ids = venueRaceIds.get(key) || [];
       ids.push(race.id);
@@ -59,9 +60,9 @@ export async function POST(req: Request) {
     let racesUpdated = 0;
     const venuesLocked: string[] = [];
 
-    for (const key of Array.from(venueFirstRace.keys())) {
-      const firstRaceTime = venueFirstRace.get(key)!;
-      const cutoff = new Date(firstRaceTime);
+    for (const key of Array.from(venueCutoffTime.keys())) {
+      const r1Time = venueCutoffTime.get(key)!;
+      const cutoff = new Date(r1Time);
       cutoff.setMinutes(cutoff.getMinutes() - CUTOFF_MINUTES);
 
       // If we're past the cutoff for this venue, lock everything
@@ -94,7 +95,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       message: "Tip close check complete",
-      venuesChecked: venueFirstRace.size,
+      venuesChecked: venueCutoffTime.size,
       venuesLocked,
       tipsLocked,
       racesUpdated,
