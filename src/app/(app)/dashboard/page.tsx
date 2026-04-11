@@ -67,11 +67,10 @@ export default async function DashboardPage() {
     take: 10,
   });
 
-  // Latest 3 settled races with top 3 finishers + dividends + user's P&L
-  const latestSettledRaces = await prisma.race.findMany({
+  // Settled races — split into today and earlier
+  const allSettledRaces = await prisma.race.findMany({
     where: { status: "final" },
-    orderBy: { raceTime: "asc" },
-    take: 6,
+    orderBy: { raceTime: "desc" },
     include: {
       results: {
         where: { finishPosition: { lte: 3 } },
@@ -84,6 +83,17 @@ export default async function DashboardPage() {
       },
     },
   });
+
+  // Split by today (Sydney timezone)
+  const sydneyNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Australia/Sydney" }));
+  const todayStr = sydneyNow.toISOString().split("T")[0];
+  const todaysResults = allSettledRaces.filter((r) => {
+    const raceSydney = new Date(r.raceTime.toLocaleString("en-US", { timeZone: "Australia/Sydney" }));
+    return raceSydney.toISOString().split("T")[0] === todayStr;
+  });
+  const earlierResults = allSettledRaces
+    .filter((r) => !todaysResults.includes(r))
+    .slice(0, 6);
 
   const feedItems = await getLatestFeed(8);
 
@@ -164,14 +174,14 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Race Results */}
-      {latestSettledRaces.length > 0 && (
+      {/* Today's Results */}
+      {todaysResults.length > 0 && (
         <div className="bg-white rounded-card p-4 border border-surface-muted shadow-card">
           <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wide">
-            Results
+            Today&apos;s Results
           </h3>
           <div className="space-y-3">
-            {latestSettledRaces.map((race) => {
+            {todaysResults.map((race) => {
               const userLedger = race.ledger[0];
               const userTipRunners = new Set(
                 userLedger?.tip?.tipLines.map((tl) => tl.runner.name) || []
@@ -216,7 +226,72 @@ export default async function DashboardPage() {
                             {result.runner.name}
                           </span>
                           {result.finishPosition === 1 && result.winDividend != null && (
-                            <span className="text-slate-400">${result.winDividend.toFixed(2)}</span>
+                            <span className="text-slate-400">${Number(result.winDividend).toFixed(2)}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Earlier Results */}
+      {earlierResults.length > 0 && (
+        <div className="bg-white rounded-card p-4 border border-surface-muted shadow-card">
+          <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wide">
+            Results
+          </h3>
+          <div className="space-y-3">
+            {earlierResults.map((race) => {
+              const userLedger = race.ledger[0];
+              const userTipRunners = new Set(
+                userLedger?.tip?.tipLines.map((tl) => tl.runner.name) || []
+              );
+              const userProfit = userLedger?.profit;
+              const isWin = userProfit != null && userProfit > 0;
+
+              return (
+                <div
+                  key={race.id}
+                  className={`rounded-lg p-3 border ${
+                    isWin
+                      ? "bg-profit/[0.03] border-profit/20"
+                      : "bg-surface/50 border-surface-muted"
+                  }`}
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-semibold text-slate-800">{race.name}
+                      <span className="text-xs text-slate-400 font-normal ml-1.5">{race.venue}</span>
+                    </span>
+                    {userProfit != null && (
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                        userProfit >= 0 ? "text-profit bg-profit/10" : "text-loss bg-loss/10"
+                      }`}>
+                        {userProfit >= 0 ? "+" : ""}${Number(userProfit).toFixed(0)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-4 text-xs">
+                    {race.results.map((result) => {
+                      const backed = userTipRunners.has(result.runner.name);
+                      return (
+                        <div key={result.id} className="flex items-center gap-1">
+                          <span className={
+                            result.finishPosition === 1 ? "text-gold font-bold" :
+                            result.finishPosition === 2 ? "text-slate-500 font-semibold" :
+                            "text-slate-400"
+                          }>
+                            {result.finishPosition === 1 ? "1st" : result.finishPosition === 2 ? "2nd" : "3rd"}
+                          </span>
+                          <span className={backed ? "text-profit font-semibold" : "text-slate-600"}>
+                            {result.runner.name}
+                          </span>
+                          {result.finishPosition === 1 && result.winDividend != null && (
+                            <span className="text-slate-400">${Number(result.winDividend).toFixed(2)}</span>
                           )}
                         </div>
                       );
@@ -281,7 +356,7 @@ export default async function DashboardPage() {
       )}
 
       {/* Welcome (no activity) */}
-      {latestSettledRaces.length === 0 && untippedRaces.length === 0 && !nextCutoff && (
+      {allSettledRaces.length === 0 && untippedRaces.length === 0 && !nextCutoff && (
         <div className="bg-white rounded-card p-6 border border-surface-muted shadow-card">
           <h3 className="text-lg font-bold text-slate-900 mb-2">
             Welcome, {user.username}!
