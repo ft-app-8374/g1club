@@ -49,24 +49,30 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      // Refresh email from DB on every session check (in case it was updated)
+      // Refresh user fields from DB on every session check (in case admin changed them)
       let email = token.email as string;
+      let isFinancial = (token.isFinancial as boolean) ?? false;
+      let role = token.role as string;
       try {
         const { prisma } = await import("@/lib/prisma");
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { email: true },
+          select: { email: true, isFinancial: true, role: true },
         });
-        if (dbUser) email = dbUser.email;
+        if (dbUser) {
+          email = dbUser.email;
+          isFinancial = dbUser.isFinancial;
+          role = dbUser.role;
+        }
       } catch {
-        // Fall back to token email if DB unavailable
+        // Fall back to token values if DB unavailable
       }
       session.user = {
         id: token.id as string,
         username: token.username as string,
         email,
-        role: token.role as string,
-        isFinancial: (token.isFinancial as boolean) ?? false,
+        role,
+        isFinancial,
       };
       return session;
     },

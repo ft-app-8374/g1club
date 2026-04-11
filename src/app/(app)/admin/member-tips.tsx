@@ -60,6 +60,11 @@ export function MemberTips({ members }: { members: Member[] }) {
 
   async function toggleFinancial(userId: string, currentValue: boolean) {
     const newValue = !currentValue;
+    const action = newValue ? "mark as PAID" : "mark as UNPAID";
+    const memberName = members.find((m) => m.id === userId)?.username || "this member";
+    if (!confirm(`Are you sure you want to ${action} for ${memberName}?`)) {
+      return;
+    }
     setFinancialOverrides((prev) => ({ ...prev, [userId]: newValue }));
     setTogglingFinancial(userId);
     try {

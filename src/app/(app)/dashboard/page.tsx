@@ -129,8 +129,8 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Countdown Timer */}
-      {nextCutoff && (
+      {/* Countdown Timer — always show until cutoff passes */}
+      {nextCutoff && new Date() < nextCutoff.cutoff && (
         <Countdown
           cutoffAt={nextCutoff.cutoff.toISOString()}
           untippedCount={untippedRaces.length}
