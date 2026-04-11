@@ -36,16 +36,32 @@ export function ResultEntry({ races }: { races: Race[] }) {
   const race = races.find((r) => r.id === selectedRace);
   const activeRunners = race?.runners.filter((r) => !r.isScratched) || [];
 
+  // Races needing admin action (have results with finishPosition=0)
+  const needsAction = races.filter(
+    (r) => r.existingResults?.some((res) => res.finishPosition === 0)
+  );
+
   function handleSelectRace(raceId: string) {
     setSelectedRace(raceId);
     setMessage("");
-    // Pre-populate with existing results if any
     const selected = races.find((r) => r.id === raceId);
     if (selected?.existingResults && selected.existingResults.length > 0) {
+      // Pre-populate: winner first (pos=1), then unconfirmed (pos=0 → show as 2, 3...)
+      const sorted = [...selected.existingResults].sort((a, b) => {
+        if (a.finishPosition === 1) return -1;
+        if (b.finishPosition === 1) return 1;
+        if (a.finishPosition === 0 && b.finishPosition === 0) return 0;
+        if (a.finishPosition === 0) return 1;
+        if (b.finishPosition === 0) return -1;
+        return a.finishPosition - b.finishPosition;
+      });
+
+      // Assign sequential positions to unconfirmed runners
+      let nextPos = 2;
       setResults(
-        selected.existingResults.map((r) => ({
+        sorted.map((r) => ({
           runnerId: r.runnerId,
-          finishPosition: r.finishPosition,
+          finishPosition: r.finishPosition === 0 ? nextPos++ : r.finishPosition,
           winDividend: r.winDividend ? r.winDividend.toString() : "",
           placeDividend: r.placeDividend ? r.placeDividend.toString() : "",
         }))
@@ -69,13 +85,23 @@ export function ResultEntry({ races }: { races: Race[] }) {
     setResults(results.filter((_, i) => i !== index));
   }
 
+  function getRunnerName(runnerId: string): string {
+    const runner = activeRunners.find((r) => r.id === runnerId);
+    return runner ? `${runner.barrier ? runner.barrier + ". " : ""}${runner.name}` : "";
+  }
+
   async function handleSettle() {
     if (!selectedRace || results.length === 0) return;
 
-    // Validate
     const hasWinner = results.some((r) => r.finishPosition === 1);
     if (!hasWinner) {
       setMessage("Must have a 1st place finisher");
+      return;
+    }
+
+    const hasUnordered = results.some((r) => r.finishPosition === 0);
+    if (hasUnordered) {
+      setMessage("Set finish position for all runners before settling");
       return;
     }
 
@@ -112,7 +138,6 @@ export function ResultEntry({ races }: { races: Race[] }) {
     setLoading(false);
   }
 
-  // Show races that can be settled or re-settled
   const settlableRaces = races.filter(
     (r) => ["closed", "open", "final"].includes(r.status) && r.runners.length > 0
   );
@@ -122,6 +147,24 @@ export function ResultEntry({ races }: { races: Race[] }) {
 
   return (
     <div className="space-y-4">
+      {/* Alert for races needing action */}
+      {needsAction.length > 0 && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+          <p className="text-sm font-bold text-orange-700 mb-1">
+            {needsAction.length} race{needsAction.length > 1 ? "s" : ""} need 2nd/3rd confirmed
+          </p>
+          {needsAction.map((r) => (
+            <button
+              key={r.id}
+              onClick={() => handleSelectRace(r.id)}
+              className="block text-sm text-orange-600 hover:text-orange-800 font-medium py-0.5"
+            >
+              {r.name} ({r.venue}) →
+            </button>
+          ))}
+        </div>
+      )}
+
       {settlableRaces.length === 0 ? (
         <p className="text-sm text-slate-400">No races ready for result entry.</p>
       ) : (
@@ -132,11 +175,15 @@ export function ResultEntry({ races }: { races: Race[] }) {
             className="w-full bg-white border border-surface-muted rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-gold"
           >
             <option value="">Select a race...</option>
-            {settlableRaces.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name} ({r.venue}) — {r.status}
-              </option>
-            ))}
+            {settlableRaces.map((r) => {
+              const needs = r.existingResults?.some((res) => res.finishPosition === 0);
+              return (
+                <option key={r.id} value={r.id}>
+                  {needs ? "⚠ " : ""}{r.name} ({r.venue}) — {r.status}
+                  {needs ? " — confirm places" : ""}
+                </option>
+              );
+            })}
           </select>
 
           {race && (
@@ -159,7 +206,9 @@ export function ResultEntry({ races }: { races: Race[] }) {
                     type="number"
                     value={result.finishPosition}
                     onChange={(e) => updateResult(i, "finishPosition", e.target.value)}
-                    className={`w-12 ${inputClasses} text-center`}
+                    className={`w-12 ${inputClasses} text-center ${
+                      result.finishPosition === 1 ? "bg-gold/10 border-gold font-bold" : ""
+                    }`}
                     min={1}
                     placeholder="#"
                   />
@@ -200,29 +249,42 @@ export function ResultEntry({ races }: { races: Race[] }) {
                 <div className="text-center py-4">
                   <button
                     onClick={() => {
-                      // Pre-populate top 4 slots
                       setResults([
                         { runnerId: "", finishPosition: 1, winDividend: "", placeDividend: "" },
                         { runnerId: "", finishPosition: 2, winDividend: "", placeDividend: "" },
                         { runnerId: "", finishPosition: 3, winDividend: "", placeDividend: "" },
-                        { runnerId: "", finishPosition: 4, winDividend: "", placeDividend: "" },
                       ]);
                     }}
                     className="text-sm text-gold hover:text-gold-dark font-medium"
                   >
-                    Set up 1st–4th placings
+                    Set up 1st–3rd placings
                   </button>
                 </div>
               )}
 
               {results.length > 0 && (
-                <button
-                  onClick={handleSettle}
-                  disabled={loading || !results.every((r) => r.runnerId)}
-                  className="w-full bg-gold hover:bg-gold-dark text-white font-bold text-sm px-4 py-3 rounded-lg transition disabled:opacity-50"
-                >
-                  {loading ? "Settling..." : "Enter Results & Settle"}
-                </button>
+                <>
+                  {/* Summary */}
+                  <div className="bg-surface rounded-lg p-3 text-xs text-slate-600">
+                    {results.filter((r) => r.runnerId).map((r) => (
+                      <div key={r.runnerId} className="flex justify-between py-0.5">
+                        <span>{r.finishPosition === 1 ? "🏆" : `${r.finishPosition}.`} {getRunnerName(r.runnerId)}</span>
+                        <span>
+                          {r.winDividend ? `W $${r.winDividend}` : ""}
+                          {r.placeDividend ? ` P $${r.placeDividend}` : ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={handleSettle}
+                    disabled={loading || !results.every((r) => r.runnerId && r.finishPosition >= 1)}
+                    className="w-full bg-gold hover:bg-gold-dark text-white font-bold text-sm px-4 py-3 rounded-lg transition disabled:opacity-50"
+                  >
+                    {loading ? "Settling..." : race.status === "final" ? "Re-Settle Race" : "Enter Results & Settle"}
+                  </button>
+                </>
               )}
 
               {message && (
