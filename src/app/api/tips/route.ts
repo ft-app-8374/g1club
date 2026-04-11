@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getCutoffForVenueOnDay } from "@/lib/cutoff";
+import { sendEmail, tipConfirmationEmail } from "@/lib/email";
 
 // GET - fetch user's tips for a race
 export async function GET(req: Request) {
@@ -202,6 +203,11 @@ export async function POST(req: Request) {
       });
     });
 
+    // Check if user has now tipped ALL races in this round — send confirmation
+    checkAndSendTipConfirmation(session.user.id, race.roundId, race.round.name).catch(
+      (err) => console.error("Tip confirmation email error:", err)
+    );
+
     return NextResponse.json({ tip });
   } catch (error) {
     console.error("Tip submission error:", error);
@@ -210,6 +216,77 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
+}
+
+async function checkAndSendTipConfirmation(
+  userId: string,
+  roundId: string,
+  roundName: string
+) {
+  // Get all non-abandoned races in this round
+  const roundRaces = await prisma.race.findMany({
+    where: { roundId, status: { not: "abandoned" } },
+    select: { id: true, name: true },
+    orderBy: { raceTime: "asc" },
+  });
+
+  // Get user's tips for these races
+  const userTips = await prisma.tip.findMany({
+    where: {
+      userId,
+      raceId: { in: roundRaces.map((r) => r.id) },
+    },
+    include: {
+      tipLines: {
+        include: {
+          runner: true,
+          backupRunner: true,
+        },
+      },
+      race: { select: { name: true } },
+    },
+  });
+
+  // Only send if ALL races are tipped
+  if (userTips.length < roundRaces.length) return;
+
+  // Check dedup — don't send if already confirmed this round
+  const confirmKey = `tip-confirmed-${roundId}-${userId}`;
+  const alreadySent = await prisma.notification.findFirst({
+    where: { type: confirmKey },
+  });
+  if (alreadySent) return;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { username: true, email: true },
+  });
+  if (!user) return;
+
+  // Build tip summary for email
+  const tipSummary = userTips.map((tip) => ({
+    raceName: tip.race.name,
+    lines: tip.tipLines.map((tl) => ({
+      horse: tl.runner.name,
+      betType: tl.betType,
+      amount: Number(tl.amount),
+      backup: tl.backupRunner?.name,
+    })),
+  }));
+
+  const email = tipConfirmationEmail(user.username, roundName, tipSummary);
+  email.to = user.email;
+  await sendEmail(email);
+
+  await prisma.notification.create({
+    data: {
+      userId,
+      type: confirmKey,
+      title: `Tips confirmed: ${roundName}`,
+      body: `All ${roundRaces.length} races tipped`,
+      isRead: true,
+    },
+  });
 }
 
 // DELETE - remove tip for a race
