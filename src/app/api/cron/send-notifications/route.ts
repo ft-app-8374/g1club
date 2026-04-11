@@ -5,6 +5,7 @@ import {
   sendEmail,
   bettingOpenEmail,
   tipReminderEmail,
+  tipConfirmationEmail,
   lockoutSummaryEmail,
   roundResultsEmail,
 } from "@/lib/email";
@@ -31,6 +32,7 @@ export async function POST(req: Request) {
       bettingOpen: 0,
       reminder2h: 0,
       reminder1h: 0,
+      tipConfirmations: 0,
       lockoutSummary: 0,
       roundResults: 0,
       errors: [] as string[],
@@ -245,9 +247,8 @@ export async function POST(req: Request) {
         }
       }
 
-      // --- 4. Post-lockout admin summary ---
+      // --- 4. Post-lockout: tip confirmations + admin summary ---
       // Trigger when ALL venues in the round have passed their cutoff
-      // and we haven't sent this notification yet
       if (allRaces.length > 0) {
         const lockoutKey = `lockout-summary-${round.id}`;
         const allVenuesPastCutoff = Array.from(venueCutoffs.entries()).every(
@@ -255,12 +256,78 @@ export async function POST(req: Request) {
         );
 
         if (allVenuesPastCutoff && venueCutoffs.size > 0) {
+          // --- 4a. Tip confirmation emails to members who tipped all races ---
+          const confirmKey = `tip-confirmed-${round.id}`;
+          const confirmAlreadySent = await prisma.notification.findFirst({
+            where: { type: confirmKey },
+          });
+
+          if (!confirmAlreadySent) {
+            const raceIds = allRaces.map((r) => r.id);
+            const allTipsForRound = await prisma.tip.findMany({
+              where: { raceId: { in: raceIds } },
+              include: {
+                user: { select: { id: true, username: true, email: true } },
+                race: { select: { name: true } },
+                tipLines: {
+                  include: {
+                    runner: { select: { name: true } },
+                    backupRunner: { select: { name: true } },
+                  },
+                },
+              },
+            });
+
+            // Group by user
+            const tipsByUser = new Map<string, typeof allTipsForRound>();
+            for (const tip of allTipsForRound) {
+              if (!tipsByUser.has(tip.userId)) tipsByUser.set(tip.userId, []);
+              tipsByUser.get(tip.userId)!.push(tip);
+            }
+
+            const confirmTargets = isLive ? members : admins;
+            for (const member of confirmTargets) {
+              const userTips = tipsByUser.get(member.id);
+              if (!userTips || userTips.length < raceIds.length) continue;
+
+              const tipSummary = userTips.map((t) => ({
+                raceName: t.race.name,
+                lines: t.tipLines.map((tl) => ({
+                  horse: tl.runner.name,
+                  betType: tl.betType,
+                  amount: Number(tl.amount),
+                  backup: tl.backupRunner?.name,
+                })),
+              }));
+
+              const email = tipConfirmationEmail(
+                member.username,
+                round.name,
+                tipSummary
+              );
+              email.to = member.email;
+              if (!isLive) email.subject = `[TEST] ${email.subject}`;
+              const sent = await sendEmail(email);
+              if (sent) results.tipConfirmations++;
+            }
+
+            await prisma.notification.create({
+              data: {
+                userId: admins[0]?.id || "system",
+                type: confirmKey,
+                title: `Tip confirmations: ${round.name}`,
+                body: `Sent at lockout`,
+                isRead: true,
+              },
+            });
+          }
+
+          // --- 4b. Admin lockout summary ---
           const alreadySent = await prisma.notification.findFirst({
             where: { type: lockoutKey },
           });
 
           if (!alreadySent) {
-            // Count tipped vs untipped members
             const raceIds = allRaces.map((r) => r.id);
             const tippedUserIds = new Set<string>();
             const untippedUsers: string[] = [];
