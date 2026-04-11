@@ -185,9 +185,9 @@ export async function settleRace(raceId: string) {
     });
   });
 
-  // Send result emails to all members (non-blocking)
-  sendResultEmails(raceId, race.name, ledgerEntries).catch((err) =>
-    console.error("Result email error:", err)
+  // Check if all races in the round are now settled — if so, send consolidated results
+  sendRoundResultsIfComplete(race.roundId).catch((err) =>
+    console.error("Round result email error:", err)
   );
 
   return {
@@ -197,32 +197,190 @@ export async function settleRace(raceId: string) {
   };
 }
 
-async function sendResultEmails(
-  raceId: string,
-  raceName: string,
-  ledgerEntries: Array<{ userId: string; profit: number }>
-) {
-  // Get user details and calculate ranks
-  const sorted = [...ledgerEntries].sort((a, b) => b.profit - a.profit);
+async function sendRoundResultsIfComplete(roundId: string) {
+  // Check if ALL races in the round are settled
+  const allRaces = await prisma.race.findMany({
+    where: { roundId, status: { not: "abandoned" } },
+    select: { id: true, name: true, status: true, numPlacePositions: true },
+    orderBy: { raceTime: "asc" },
+  });
+
+  const unsettled = allRaces.filter((r) => r.status !== "final");
+  if (unsettled.length > 0) return; // Not all races settled yet
+
+  // Check dedup
+  const round = await prisma.round.findUnique({
+    where: { id: roundId },
+    select: { name: true },
+  });
+  if (!round) return;
+
+  const notifKey = `member-results-${roundId}`;
+  const alreadySent = await prisma.notification.findFirst({
+    where: { type: notifKey },
+  });
+  if (alreadySent) return;
+
+  const raceIds = allRaces.map((r) => r.id);
+
+  // Get all ledger entries for the round
+  const ledgerEntries = await prisma.ledger.findMany({
+    where: { raceId: { in: raceIds } },
+    include: {
+      tip: {
+        include: {
+          tipLines: {
+            include: {
+              runner: { select: { name: true } },
+              effectiveRunner: { select: { name: true } },
+            },
+          },
+        },
+      },
+      race: {
+        select: {
+          id: true,
+          name: true,
+          results: {
+            include: { runner: { select: { name: true } } },
+            orderBy: { finishPosition: "asc" },
+          },
+        },
+      },
+    },
+  });
+
+  // Group by user, sum profits
+  const userRoundData = new Map<
+    string,
+    {
+      totalProfit: number;
+      races: Array<{
+        name: string;
+        profit: number;
+        bets: Array<{
+          horse: string;
+          betType: string;
+          amount: number;
+          dividend: number | null;
+          result: string;
+        }>;
+      }>;
+    }
+  >();
+
+  for (const entry of ledgerEntries) {
+    if (!userRoundData.has(entry.userId)) {
+      userRoundData.set(entry.userId, { totalProfit: 0, races: [] });
+    }
+    const userData = userRoundData.get(entry.userId)!;
+    userData.totalProfit += Number(entry.profit);
+
+    // Build bet details for this race
+    const bets: Array<{
+      horse: string;
+      betType: string;
+      amount: number;
+      dividend: number | null;
+      result: string;
+    }> = [];
+
+    if (entry.tip) {
+      for (const tl of entry.tip.tipLines) {
+        const horseName = tl.effectiveRunner?.name || tl.runner.name;
+        const raceResults = entry.race.results;
+        const runnerResult = raceResults.find(
+          (r) => r.runner.name === horseName
+        );
+
+        let resultText = "Lost";
+        let dividend: number | null = null;
+        if (runnerResult) {
+          if (tl.betType === "win" && runnerResult.finishPosition === 1) {
+            resultText = "Won";
+            dividend = runnerResult.winDividend
+              ? Number(runnerResult.winDividend)
+              : null;
+          } else if (
+            tl.betType === "place" &&
+            runnerResult.finishPosition <=
+              (allRaces.find((r) => r.id === entry.raceId)
+                ?.numPlacePositions || 3)
+          ) {
+            resultText = "Placed";
+            dividend = runnerResult.placeDividend
+              ? Number(runnerResult.placeDividend)
+              : null;
+          }
+        }
+
+        bets.push({
+          horse: horseName,
+          betType: tl.betType,
+          amount: Number(tl.amount),
+          dividend,
+          result: resultText,
+        });
+      }
+    } else {
+      bets.push({
+        horse: "—",
+        betType: "—",
+        amount: 100,
+        dividend: null,
+        result: "No tip",
+      });
+    }
+
+    userData.races.push({
+      name: entry.race.name,
+      profit: Number(entry.profit),
+      bets,
+    });
+  }
+
+  // Calculate ranks by total round profit
+  const ranked = Array.from(userRoundData.entries())
+    .map(([userId, data]) => ({
+      userId,
+      totalProfit: Math.round(data.totalProfit * 100) / 100,
+      races: data.races,
+    }))
+    .sort((a, b) => b.totalProfit - a.totalProfit);
+
+  // Get user details
   const users = await prisma.user.findMany({
-    where: { id: { in: ledgerEntries.map((l) => l.userId) } },
+    where: { id: { in: ranked.map((r) => r.userId) } },
     select: { id: true, username: true, email: true },
   });
   const userMap = new Map(users.map((u) => [u.id, u]));
 
-  for (let i = 0; i < sorted.length; i++) {
-    const entry = sorted[i];
+  // Send consolidated email to each user
+  for (let i = 0; i < ranked.length; i++) {
+    const entry = ranked[i];
     const user = userMap.get(entry.userId);
     if (!user) continue;
 
     const email = resultsEmail(
       user.username,
-      raceName,
-      entry.profit,
+      round.name,
+      entry.totalProfit,
       i + 1,
-      sorted.length
+      ranked.length,
+      entry.races
     );
     email.to = user.email;
     await sendEmail(email);
   }
+
+  // Mark as sent
+  await prisma.notification.create({
+    data: {
+      userId: ranked[0]?.userId || "system",
+      type: notifKey,
+      title: `Results sent: ${round.name}`,
+      body: `${ranked.length} members`,
+      isRead: true,
+    },
+  });
 }

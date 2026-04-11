@@ -137,20 +137,67 @@ export function tipReminderEmail(username: string, roundName: string, untippedRa
   };
 }
 
-export function resultsEmail(username: string, raceName: string, profit: number, rank: number, totalPlayers: number): EmailOptions {
-  const profitColor = profit >= 0 ? "#10b981" : "#ef4444";
-  const profitStr = `${profit >= 0 ? "+" : ""}$${profit.toFixed(2)}`;
+export function resultsEmail(
+  username: string,
+  roundName: string,
+  totalProfit: number,
+  rank: number,
+  totalPlayers: number,
+  races: Array<{
+    name: string;
+    profit: number;
+    bets: Array<{ horse: string; betType: string; amount: number; dividend: number | null; result: string }>;
+  }>
+): EmailOptions {
+  const profitColor = totalProfit >= 0 ? "#10b981" : "#ef4444";
+  const profitStr = `${totalProfit >= 0 ? "+" : ""}$${totalProfit.toFixed(2)}`;
+
+  const raceBlocks = races.map((race) => {
+    const raceProfitColor = race.profit >= 0 ? "#10b981" : "#ef4444";
+    const raceProfitStr = `${race.profit >= 0 ? "+" : ""}$${race.profit.toFixed(2)}`;
+    const betRows = race.bets.map((b) =>
+      `<tr>
+        <td style="padding: 4px 12px; border-bottom: 1px solid #1e293b; color: #e2e8f0;">${escapeHtml(b.horse)}</td>
+        <td style="padding: 4px 12px; border-bottom: 1px solid #1e293b; color: #94a3b8; text-transform: capitalize;">${escapeHtml(b.betType)}</td>
+        <td style="padding: 4px 12px; border-bottom: 1px solid #1e293b; color: #94a3b8; text-align: right;">$${b.amount.toFixed(0)}</td>
+        <td style="padding: 4px 12px; border-bottom: 1px solid #1e293b; color: #94a3b8; text-align: right;">${b.dividend ? "$" + b.dividend.toFixed(2) : "—"}</td>
+        <td style="padding: 4px 12px; border-bottom: 1px solid #1e293b; color: ${b.result === "Won" ? "#10b981" : b.result === "Placed" ? "#d4a843" : "#64748b"};">${escapeHtml(b.result)}</td>
+      </tr>`
+    ).join("");
+
+    return `
+      <div style="background: #111827; border-radius: 8px; padding: 16px; margin: 12px 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="color: #d4a843; margin: 0;">${escapeHtml(race.name)}</h3>
+          <span style="color: ${raceProfitColor}; font-weight: bold;">${raceProfitStr}</span>
+        </div>
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid #334155;">
+              <th style="padding: 4px 12px; text-align: left; color: #64748b; font-size: 11px;">Horse</th>
+              <th style="padding: 4px 12px; text-align: left; color: #64748b; font-size: 11px;">Type</th>
+              <th style="padding: 4px 12px; text-align: right; color: #64748b; font-size: 11px;">Stake</th>
+              <th style="padding: 4px 12px; text-align: right; color: #64748b; font-size: 11px;">Div</th>
+              <th style="padding: 4px 12px; text-align: left; color: #64748b; font-size: 11px;">Result</th>
+            </tr>
+          </thead>
+          <tbody>${betRows}</tbody>
+        </table>
+      </div>
+    `;
+  }).join("");
 
   return {
     to: "",
-    subject: `Result: ${raceName} — ${profitStr}`,
+    subject: `Round Results — ${roundName} — ${profitStr}`,
     html: wrapTemplate(`
-      <h2 style="color: #e2e8f0; margin-top: 0;">${escapeHtml(raceName)} — Result</h2>
+      <h2 style="color: #e2e8f0; margin-top: 0;">Round Results — ${escapeHtml(roundName)}</h2>
       <div style="text-align: center; margin: 24px 0; padding: 20px; background: #111827; border-radius: 12px;">
-        <p style="color: #64748b; margin: 0 0 8px 0; font-size: 14px;">Your P&L</p>
+        <p style="color: #64748b; margin: 0 0 8px 0; font-size: 14px;">Your Total P&L</p>
         <p style="color: ${profitColor}; font-size: 36px; font-weight: bold; margin: 0;">${profitStr}</p>
         <p style="color: #64748b; margin: 8px 0 0 0; font-size: 14px;">Rank: #${rank} of ${totalPlayers}</p>
       </div>
+      ${raceBlocks}
       <div style="text-align: center; margin: 24px 0;">
         <a href="${APP_URL}/leaderboard" style="background-color: #d4a843; color: #0a0f1e; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">
           View Leaderboard
