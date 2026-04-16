@@ -174,6 +174,40 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {/* Your Tips */}
+      {activeBets.length > 0 && (
+        <div className="bg-white rounded-card p-4 border border-surface-muted shadow-card">
+          <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wide">
+            Your Tips ({activeBets.length})
+          </h3>
+          <div className="space-y-2">
+            {activeBets.map((bet) => (
+              <a
+                key={bet.id}
+                href={`/races/${bet.raceId}`}
+                className="block bg-surface rounded-lg p-3 hover:shadow-sm transition"
+              >
+                <div className="flex justify-between items-start mb-1">
+                  <span className="font-medium text-sm text-slate-800">{bet.race.name}</span>
+                  <span className="text-xs text-slate-400">
+                    {new Date(bet.race.raceTime).toLocaleTimeString("en-AU", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                      timeZone: "Australia/Sydney",
+                    })}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  {bet.tipLines
+                    .map((tl) => `$${tl.amount} ${tl.betType.toUpperCase()} ${tl.runner.name}`)
+                    .join(", ")}
+                </p>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Today's Results */}
       {todaysResults.length > 0 && (
         <div className="bg-white rounded-card p-4 border border-surface-muted shadow-card">
@@ -300,40 +334,6 @@ export default async function DashboardPage() {
                 </div>
               );
             })}
-          </div>
-        </div>
-      )}
-
-      {/* Active Bets */}
-      {activeBets.length > 0 && (
-        <div className="bg-white rounded-card p-4 border border-surface-muted shadow-card">
-          <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wide">
-            Your Bets ({activeBets.length})
-          </h3>
-          <div className="space-y-2">
-            {activeBets.map((bet) => (
-              <a
-                key={bet.id}
-                href={`/races/${bet.raceId}`}
-                className="block bg-surface rounded-lg p-3 hover:shadow-sm transition"
-              >
-                <div className="flex justify-between items-start mb-1">
-                  <span className="font-medium text-sm text-slate-800">{bet.race.name}</span>
-                  <span className="text-xs text-slate-400">
-                    {new Date(bet.race.raceTime).toLocaleTimeString("en-AU", {
-                      hour: "numeric",
-                      minute: "2-digit",
-                      timeZone: "Australia/Sydney",
-                    })}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500">
-                  {bet.tipLines
-                    .map((tl) => `$${tl.amount} ${tl.betType.toUpperCase()} ${tl.runner.name}`)
-                    .join(", ")}
-                </p>
-              </a>
-            ))}
           </div>
         </div>
       )}

@@ -60,6 +60,12 @@ export function Countdown({ cutoffAt, untippedCount, roundName, venue }: Countdo
         </div>
       )}
 
+      <p className={`text-center text-xs font-bold uppercase tracking-widest mb-2 ${
+        isCritical ? "text-loss" : isUrgent ? "text-orange-600" : "text-gold"
+      }`}>
+        Tipping closes in
+      </p>
+
       <div className="flex justify-center gap-3">
         <TimeBlock value={timeLeft.days} label="days" show={timeLeft.days > 0} />
         <TimeBlock value={timeLeft.hours} label="hrs" show={true} />
