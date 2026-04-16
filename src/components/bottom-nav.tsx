@@ -49,7 +49,7 @@ export function AppHeader({
   return (
     <>
       {/* Sticky Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-surface-muted h-14 flex items-center px-4">
+      <header className="sticky top-0 z-50 bg-white border-b border-surface-muted h-16 flex items-center px-4 shadow-sm">
         <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
           {/* Left: hamburger */}
           <button
@@ -73,8 +73,8 @@ export function AppHeader({
           </button>
 
           {/* Center: title */}
-          <h1 className="text-lg font-bold text-slate-900">
-            Group 1 <span className="text-gold">Club</span>
+          <h1 className="font-display text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+            Group 1<span className="italic font-bold text-gold ml-1.5">Club</span>
           </h1>
 
           {/* Right: avatar → links to profile */}
@@ -109,8 +109,8 @@ export function AppHeader({
             {/* Drawer Header */}
             <div className="bg-gradient-to-br from-slate-800 to-slate-600 px-5 py-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-white font-bold text-lg">
-                  Group 1 <span className="text-gold">Club</span>
+                <h2 className="font-display text-white font-black text-2xl tracking-tight leading-none">
+                  Group 1<span className="italic font-bold text-gold ml-1.5">Club</span>
                 </h2>
                 <button
                   onClick={() => setDrawerOpen(false)}

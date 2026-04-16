@@ -33,6 +33,7 @@ const config: Config = {
           "system-ui",
           "sans-serif",
         ],
+        display: ["var(--font-display)", "Playfair Display", "serif"],
       },
       borderRadius: {
         card: "16px",
