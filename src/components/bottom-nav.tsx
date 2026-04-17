@@ -50,8 +50,8 @@ export function AppHeader({
   return (
     <>
       {/* Sticky Header */}
-      {/* Sticky Header */}
-      <header className="sticky top-0 z-50 bg-[#201030] shadow-md h-16 flex items-center px-4">
+      {/* Sticky Header — dark bg matches logo background exactly */}
+      <header className="sticky top-0 z-50 bg-[#20102b] shadow-md px-4">
         <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
           {/* Left: hamburger */}
           <button
@@ -74,14 +74,14 @@ export function AppHeader({
             </svg>
           </button>
 
-          {/* Center: horizontal logo */}
-          <Link href="/dashboard">
+          {/* Center: original logo — bg blends into header */}
+          <Link href="/dashboard" className="py-1">
             <Image
-              src="/logo.png"
+              src="/logo.jpg"
               alt="Group 1 Club"
-              width={601}
-              height={220}
-              className="h-14 w-auto object-contain"
+              width={810}
+              height={654}
+              className="h-16 w-auto"
               priority
             />
           </Link>
