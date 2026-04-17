@@ -51,8 +51,8 @@ export function AppHeader({
     <>
       {/* Sticky Header */}
       {/* Sticky Header */}
-      <header className="sticky top-0 z-50 bg-[#201030] shadow-md px-4">
-        <div className="max-w-5xl mx-auto w-full flex items-center justify-between py-2">
+      <header className="sticky top-0 z-50 bg-[#201030] shadow-md h-16 flex items-center px-4">
+        <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
           {/* Left: hamburger */}
           <button
             onClick={() => setDrawerOpen(true)}
@@ -74,14 +74,14 @@ export function AppHeader({
             </svg>
           </button>
 
-          {/* Center: logo — as wide as possible, no height restriction */}
-          <Link href="/dashboard" className="flex-1 flex justify-center px-2">
+          {/* Center: horizontal logo */}
+          <Link href="/dashboard">
             <Image
               src="/logo.png"
               alt="Group 1 Club"
-              width={810}
-              height={654}
-              className="w-full max-w-sm object-contain"
+              width={601}
+              height={220}
+              className="h-14 w-auto object-contain"
               priority
             />
           </Link>
