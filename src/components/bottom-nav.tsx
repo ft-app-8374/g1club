@@ -50,12 +50,12 @@ export function AppHeader({
   return (
     <>
       {/* Sticky Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-surface-muted h-16 flex items-center px-4 shadow-sm">
+      <header className="sticky top-0 z-50 bg-[#201030] shadow-md h-16 flex items-center px-4">
         <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
           {/* Left: hamburger */}
           <button
             onClick={() => setDrawerOpen(true)}
-            className="w-10 h-10 flex items-center justify-center text-slate-600 hover:text-slate-900 -ml-2"
+            className="w-10 h-10 flex items-center justify-center text-gold/70 hover:text-gold -ml-2"
             aria-label="Open menu"
           >
             <svg
@@ -73,14 +73,14 @@ export function AppHeader({
             </svg>
           </button>
 
-          {/* Center: logo */}
+          {/* Center: logo — sized to fit 64px header */}
           <Link href="/dashboard">
             <Image
               src="/logo.png"
               alt="Group 1 Club"
-              width={120}
-              height={48}
-              className="h-10 w-auto object-contain"
+              width={160}
+              height={130}
+              className="h-14 w-auto object-contain"
               priority
             />
           </Link>
@@ -89,12 +89,12 @@ export function AppHeader({
           <Link href="/profile" className="flex items-center gap-2">
             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
               isFinancial
-                ? "bg-green-50 text-profit border border-green-200"
-                : "bg-red-50 text-loss border border-red-200"
+                ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                : "bg-red-500/20 text-red-300 border border-red-500/30"
             }`}>
               {isFinancial ? "Financial" : "Non-financial"}
             </span>
-            <div className="w-8 h-8 rounded-full bg-gold-accent flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center">
               <span className="text-sm font-bold text-gold">
                 {username[0]?.toUpperCase()}
               </span>
