@@ -50,7 +50,7 @@ export function AppHeader({
   return (
     <>
       {/* Sticky Header */}
-      <header className="sticky top-0 z-50 bg-[#201030] shadow-md h-28 flex items-center px-4">
+      <header className="sticky top-0 z-50 bg-[#201030] shadow-md h-40 flex items-center px-4">
         <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
           {/* Left: hamburger */}
           <button
@@ -80,7 +80,7 @@ export function AppHeader({
               alt="Group 1 Club"
               width={280}
               height={226}
-              className="h-24 w-auto object-contain"
+              className="h-36 w-auto object-contain"
               priority
             />
           </Link>
