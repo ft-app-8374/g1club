@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
@@ -72,10 +73,17 @@ export function AppHeader({
             </svg>
           </button>
 
-          {/* Center: title */}
-          <h1 className="font-display text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
-            Group 1<span className="italic font-bold text-gold ml-1.5">Club</span>
-          </h1>
+          {/* Center: logo */}
+          <Link href="/dashboard">
+            <Image
+              src="/logo.png"
+              alt="Group 1 Club"
+              width={120}
+              height={48}
+              className="h-10 w-auto object-contain"
+              priority
+            />
+          </Link>
 
           {/* Right: avatar → links to profile */}
           <Link href="/profile" className="flex items-center gap-2">
@@ -109,9 +117,13 @@ export function AppHeader({
             {/* Drawer Header */}
             <div className="bg-gradient-to-br from-slate-800 to-slate-600 px-5 py-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-display text-white font-black text-2xl tracking-tight leading-none">
-                  Group 1<span className="italic font-bold text-gold ml-1.5">Club</span>
-                </h2>
+                <Image
+                  src="/logo.png"
+                  alt="Group 1 Club"
+                  width={140}
+                  height={56}
+                  className="h-12 w-auto object-contain"
+                />
                 <button
                   onClick={() => setDrawerOpen(false)}
                   className="text-white/70 hover:text-white"
@@ -179,7 +191,7 @@ export function AppHeader({
             {/* Drawer Footer */}
             <div className="border-t border-surface-muted px-5 py-3">
               <p className="text-xs text-slate-400">
-                Group 1 Club &middot; Est. 2015
+                Group 1 Club &middot; Est. 2014
               </p>
             </div>
           </nav>
