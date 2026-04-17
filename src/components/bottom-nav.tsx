@@ -50,12 +50,13 @@ export function AppHeader({
   return (
     <>
       {/* Sticky Header */}
-      <header className="sticky top-0 z-50 bg-[#201030] shadow-md h-40 flex items-center px-4">
-        <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-50 bg-[#201030] shadow-md px-4">
+        <div className="max-w-5xl mx-auto w-full flex items-center justify-between py-2">
           {/* Left: hamburger */}
           <button
             onClick={() => setDrawerOpen(true)}
-            className="w-10 h-10 flex items-center justify-center text-gold/70 hover:text-gold -ml-2"
+            className="w-10 h-10 flex items-center justify-center text-gold/70 hover:text-gold -ml-2 shrink-0"
             aria-label="Open menu"
           >
             <svg
@@ -73,20 +74,20 @@ export function AppHeader({
             </svg>
           </button>
 
-          {/* Center: logo — sized to fit 64px header */}
-          <Link href="/dashboard">
+          {/* Center: logo — as wide as possible, no height restriction */}
+          <Link href="/dashboard" className="flex-1 flex justify-center px-2">
             <Image
               src="/logo.png"
               alt="Group 1 Club"
-              width={280}
-              height={226}
-              className="h-36 w-auto object-contain"
+              width={810}
+              height={654}
+              className="w-full max-w-sm object-contain"
               priority
             />
           </Link>
 
           {/* Right: avatar → links to profile */}
-          <Link href="/profile" className="flex items-center gap-2">
+          <Link href="/profile" className="flex items-center gap-2 shrink-0">
             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
               isFinancial
                 ? "bg-green-500/20 text-green-300 border border-green-500/30"
