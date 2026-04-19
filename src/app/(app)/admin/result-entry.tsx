@@ -85,6 +85,24 @@ export function ResultEntry({ races }: { races: Race[] }) {
     setResults(results.filter((_, i) => i !== index));
   }
 
+  function swapSecondThird() {
+    setResults(
+      results.map((r) => {
+        if (r.finishPosition === 2) return { ...r, finishPosition: 3 };
+        if (r.finishPosition === 3) return { ...r, finishPosition: 2 };
+        return r;
+      })
+    );
+  }
+
+  // Betfair pre-populated all 3 placegetters with dividends — admin just confirms (or swaps 2nd/3rd).
+  const isConfirmationMode =
+    results.length === 3 &&
+    results.every((r) => r.runnerId && r.winDividend && r.placeDividend) &&
+    results.some((r) => r.finishPosition === 1) &&
+    results.some((r) => r.finishPosition === 2) &&
+    results.some((r) => r.finishPosition === 3);
+
   function getRunnerName(runnerId: string): string {
     const runner = activeRunners.find((r) => r.id === runnerId);
     return runner ? `${runner.barrier ? runner.barrier + ". " : ""}${runner.name}` : "";
@@ -192,58 +210,104 @@ export function ResultEntry({ races }: { races: Race[] }) {
                 <h4 className="text-sm font-semibold text-slate-900">
                   {race.name} — {activeRunners.length} active runners
                 </h4>
-                <button
-                  onClick={addResult}
-                  className="text-xs text-gold hover:text-gold-dark font-medium"
-                >
-                  + Add Placing
-                </button>
+                {!isConfirmationMode && (
+                  <button
+                    onClick={addResult}
+                    className="text-xs text-gold hover:text-gold-dark font-medium"
+                  >
+                    + Add Placing
+                  </button>
+                )}
               </div>
 
-              {results.map((result, i) => (
-                <div key={i} className="flex gap-2 items-center">
-                  <input
-                    type="number"
-                    value={result.finishPosition}
-                    onChange={(e) => updateResult(i, "finishPosition", e.target.value)}
-                    className={`w-12 ${inputClasses} text-center ${
-                      result.finishPosition === 1 ? "bg-gold/10 border-gold font-bold" : ""
-                    }`}
-                    min={1}
-                    placeholder="#"
-                  />
-                  <select
-                    value={result.runnerId}
-                    onChange={(e) => updateResult(i, "runnerId", e.target.value)}
-                    className={`flex-1 ${inputClasses}`}
-                  >
-                    <option value="">Select horse...</option>
-                    {activeRunners.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.barrier ? `${r.barrier}. ` : ""}{r.name}
-                      </option>
+              {isConfirmationMode ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-slate-600">
+                    Betfair has identified these placegetters. Use the swap button below if 2nd and 3rd are reversed.
+                  </p>
+                  {[...results]
+                    .sort((a, b) => a.finishPosition - b.finishPosition)
+                    .map((r) => (
+                      <div
+                        key={r.runnerId}
+                        className={`flex items-center gap-3 rounded-lg p-3 border ${
+                          r.finishPosition === 1
+                            ? "border-gold bg-gold/5"
+                            : "border-surface-muted bg-white"
+                        }`}
+                      >
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
+                            r.finishPosition === 1
+                              ? "bg-gold text-white"
+                              : "bg-surface text-slate-700"
+                          }`}
+                        >
+                          {r.finishPosition === 1 ? "🏆" : r.finishPosition}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-slate-900 truncate">
+                            {getRunnerName(r.runnerId)}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            Win ${r.winDividend} · Place ${r.placeDividend}
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </select>
-                  <input
-                    placeholder="Win $"
-                    value={result.winDividend}
-                    onChange={(e) => updateResult(i, "winDividend", e.target.value)}
-                    className={`w-20 ${inputClasses} placeholder-slate-400`}
-                  />
-                  <input
-                    placeholder="Place $"
-                    value={result.placeDividend}
-                    onChange={(e) => updateResult(i, "placeDividend", e.target.value)}
-                    className={`w-20 ${inputClasses} placeholder-slate-400`}
-                  />
                   <button
-                    onClick={() => removeResult(i)}
-                    className="text-loss hover:text-red-700 text-sm"
+                    onClick={swapSecondThird}
+                    className="w-full bg-white border border-surface-muted hover:border-gold hover:bg-gold/5 rounded-lg py-2 text-sm font-medium text-slate-700 transition"
                   >
-                    ✕
+                    ⇅ Swap 2nd ↔ 3rd
                   </button>
                 </div>
-              ))}
+              ) : (
+                results.map((result, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <input
+                      type="number"
+                      value={result.finishPosition}
+                      onChange={(e) => updateResult(i, "finishPosition", e.target.value)}
+                      className={`w-12 ${inputClasses} text-center ${
+                        result.finishPosition === 1 ? "bg-gold/10 border-gold font-bold" : ""
+                      }`}
+                      min={1}
+                      placeholder="#"
+                    />
+                    <select
+                      value={result.runnerId}
+                      onChange={(e) => updateResult(i, "runnerId", e.target.value)}
+                      className={`flex-1 ${inputClasses}`}
+                    >
+                      <option value="">Select horse...</option>
+                      {activeRunners.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.barrier ? `${r.barrier}. ` : ""}{r.name}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      placeholder="Win $"
+                      value={result.winDividend}
+                      onChange={(e) => updateResult(i, "winDividend", e.target.value)}
+                      className={`w-20 ${inputClasses} placeholder-slate-400`}
+                    />
+                    <input
+                      placeholder="Place $"
+                      value={result.placeDividend}
+                      onChange={(e) => updateResult(i, "placeDividend", e.target.value)}
+                      className={`w-20 ${inputClasses} placeholder-slate-400`}
+                    />
+                    <button
+                      onClick={() => removeResult(i)}
+                      className="text-loss hover:text-red-700 text-sm"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))
+              )}
 
               {results.length === 0 && (
                 <div className="text-center py-4">
